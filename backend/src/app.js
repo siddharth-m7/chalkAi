@@ -4,6 +4,7 @@ import cors from 'cors'
 import { connectDB } from './config/db.js'
 import { connectRedis } from './config/redis.js'
 import { errorHandler } from './middleware/errorHandler.js'
+import { apiLimiter, generateLimiter } from './middleware/rateLimiter.js'
 import { logger } from './config/logger.js'
 import authRoutes from './routes/auth.js'
 import userRoutes from './routes/users.js'
@@ -16,10 +17,11 @@ const app = express()
 
 app.use(cors({ origin: process.env.CLIENT_URL }))
 app.use(express.json())
+app.use(apiLimiter)
 
 app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/users', userRoutes)
-app.use('/api/v1/generate', generateRoutes)
+app.use('/api/v1/generate', generateLimiter, generateRoutes)
 app.use('/api/v1/library', libraryRoutes)
 app.use('/api/v1/resources', resourceRoutes)
 app.use('/api/v1/export', exportRoutes)
