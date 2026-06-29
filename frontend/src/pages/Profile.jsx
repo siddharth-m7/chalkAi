@@ -6,6 +6,8 @@ import api from '../api/axios'
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics', 'Other']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
 
+const inputCls = 'w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5841]/40 focus:border-[#FF5841]'
+
 const Profile = () => {
   const { user, updateUser } = useAuth()
   const [form, setForm] = useState({
@@ -58,11 +60,11 @@ const Profile = () => {
     <Layout>
       <div className="max-w-2xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Your Profile</h1>
-          <p className="text-gray-500 mt-1 text-sm">This helps personalize your AI-generated content</p>
+          <h1 className="text-2xl font-bold text-black">Your Profile</h1>
+          <p className="text-stone-500 mt-1 text-sm">This helps personalize your AI-generated content</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-8">
+        <div className="bg-white border border-stone-200 rounded-2xl p-8">
           {success && (
             <div className="mb-6 px-4 py-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
               Profile updated successfully
@@ -75,35 +77,32 @@ const Profile = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+              <label className="block text-sm font-medium text-black mb-1">Full name</label>
               <input
                 type="text"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className={inputCls}
               />
             </div>
 
-            {/* School */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">School / Institution</label>
+              <label className="block text-sm font-medium text-black mb-1">School / Institution</label>
               <input
                 type="text"
                 name="school"
                 value={form.profile.school}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className={inputCls}
                 placeholder="e.g. Delhi Public School"
               />
             </div>
 
-            {/* Subjects */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Subjects you teach</label>
+              <label className="block text-sm font-medium text-black mb-2">Subjects you teach</label>
               <div className="flex flex-wrap gap-2">
                 {SUBJECTS.map((subject) => (
                   <button
@@ -112,8 +111,8 @@ const Profile = () => {
                     onClick={() => toggleMulti('subjects', subject)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       form.profile.subjects.includes(subject)
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+                        ? 'bg-[#FF5841] text-white border-[#FF5841]'
+                        : 'bg-white text-stone-600 border-stone-200 hover:border-black'
                     }`}
                   >
                     {subject}
@@ -122,9 +121,8 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Grade Levels */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Grade levels you teach</label>
+              <label className="block text-sm font-medium text-black mb-2">Grade levels you teach</label>
               <div className="flex flex-wrap gap-2">
                 {GRADE_LEVELS.map((grade) => (
                   <button
@@ -133,8 +131,8 @@ const Profile = () => {
                     onClick={() => toggleMulti('gradeLevels', grade)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       form.profile.gradeLevels.includes(grade)
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+                        ? 'bg-[#FF5841] text-white border-[#FF5841]'
+                        : 'bg-white text-stone-600 border-stone-200 hover:border-black'
                     }`}
                   >
                     {grade}
@@ -143,15 +141,14 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Bio */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+              <label className="block text-sm font-medium text-black mb-1">Bio</label>
               <textarea
                 name="bio"
                 value={form.profile.bio}
                 onChange={handleChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                className={inputCls + ' resize-none'}
                 placeholder="Tell us a bit about yourself..."
               />
             </div>
@@ -159,7 +156,7 @@ const Profile = () => {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2.5 bg-[#FF5841] text-white text-sm font-medium rounded-lg hover:bg-[#e04d38] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Saving...' : 'Save changes'}
             </button>

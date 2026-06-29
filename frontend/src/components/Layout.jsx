@@ -17,48 +17,50 @@ const Layout = ({ children }) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-stone-50">
       {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-60 bg-white border-r border-stone-200 flex flex-col shrink-0">
         {/* Brand */}
-        <div className="px-6 py-5 border-b border-gray-200">
-          <span className="text-xl font-bold text-indigo-600 tracking-tight">ChalkAI</span>
+        <div className="px-5 py-5 border-b border-stone-100">
+          <NavLink to="/" className="text-lg font-bold text-black tracking-tight hover:opacity-70 transition-opacity">
+            Chalk<span className="text-[#FF5841]">AI</span>
+          </NavLink>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-[#FF5841] text-white shadow-sm'
+                    : 'text-stone-500 hover:bg-stone-100 hover:text-black'
                 }`
               }
             >
-              <span className="text-base">{item.icon}</span>
+              <span className="text-base leading-none">{item.icon}</span>
               {item.label}
             </NavLink>
           ))}
         </nav>
 
         {/* User section */}
-        <div className="px-4 py-4 border-t border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-sm">
+        <div className="px-4 py-4 border-t border-stone-100">
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white font-semibold text-xs shrink-0">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              <p className="text-xs font-semibold text-black truncate">{user?.name}</p>
+              <p className="text-xs text-stone-400 truncate">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full text-left text-sm text-gray-500 hover:text-red-600 transition-colors px-1"
+            className="w-full text-left text-xs text-stone-400 hover:text-[#FF5841] transition-colors px-1 py-1"
           >
             Sign out
           </button>

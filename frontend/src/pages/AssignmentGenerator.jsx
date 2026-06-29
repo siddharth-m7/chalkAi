@@ -21,6 +21,8 @@ const defaultForm = {
   questionTypes: ['mcq']
 }
 
+const inputCls = 'w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5841]/40 focus:border-[#FF5841]'
+
 const AssignmentGenerator = () => {
   const [form, setForm] = useState(defaultForm)
   const [result, setResult] = useState(null)
@@ -69,12 +71,12 @@ const AssignmentGenerator = () => {
     <Layout>
       <div className="max-w-3xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Assignment Generator</h1>
-          <p className="text-gray-500 mt-1 text-sm">Generate custom assignments with questions and answer keys</p>
+          <h1 className="text-2xl font-bold text-black">Assignment Generator</h1>
+          <p className="text-stone-500 mt-1 text-sm">Generate custom assignments with questions and answer keys</p>
         </div>
 
         {!result ? (
-          <div className="bg-white border border-gray-200 rounded-2xl p-8">
+          <div className="bg-white border border-stone-200 rounded-2xl p-8">
             {error && (
               <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
                 {error}
@@ -84,13 +86,13 @@ const AssignmentGenerator = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                  <label className="block text-sm font-medium text-black mb-1">Subject</label>
                   <select
                     name="subject"
                     value={form.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className={inputCls}
                   >
                     <option value="">Select subject</option>
                     {SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -98,13 +100,13 @@ const AssignmentGenerator = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
+                  <label className="block text-sm font-medium text-black mb-1">Grade Level</label>
                   <select
                     name="gradeLevel"
                     value={form.gradeLevel}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className={inputCls}
                   >
                     <option value="">Select grade</option>
                     {GRADE_LEVELS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -113,8 +115,8 @@ const AssignmentGenerator = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chapter <span className="text-gray-400 font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Chapter <span className="text-stone-400 font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -122,13 +124,13 @@ const AssignmentGenerator = () => {
                   value={form.chapter}
                   onChange={handleChange}
                   placeholder="e.g. Chapter 3 – Laws of Motion"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputCls}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Topic <span className="text-gray-400 font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Topic <span className="text-stone-400 font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -136,14 +138,14 @@ const AssignmentGenerator = () => {
                   value={form.topic}
                   onChange={handleChange}
                   placeholder="e.g. Newton's Second Law"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputCls}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Number of Questions — <span className="text-indigo-600">{form.numberOfQuestions}</span>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    Number of Questions — <span className="text-[#FF5841] font-semibold">{form.numberOfQuestions}</span>
                   </label>
                   <input
                     type="range"
@@ -152,15 +154,15 @@ const AssignmentGenerator = () => {
                     max="20"
                     value={form.numberOfQuestions}
                     onChange={handleChange}
-                    className="w-full accent-indigo-600"
+                    className="w-full accent-[#FF5841]"
                   />
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <div className="flex justify-between text-xs text-stone-400 mt-1">
                     <span>1</span><span>20</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                  <label className="block text-sm font-medium text-black mb-1">Difficulty</label>
                   <div className="flex gap-2">
                     {['easy', 'medium', 'hard'].map((d) => (
                       <button
@@ -169,8 +171,8 @@ const AssignmentGenerator = () => {
                         onClick={() => setForm({ ...form, difficulty: d })}
                         className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors capitalize ${
                           form.difficulty === d
-                            ? 'bg-indigo-600 text-white border-indigo-600'
-                            : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+                            ? 'bg-black text-white border-black'
+                            : 'bg-white text-stone-600 border-stone-200 hover:border-black'
                         }`}
                       >
                         {d}
@@ -181,7 +183,7 @@ const AssignmentGenerator = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Question Types</label>
+                <label className="block text-sm font-medium text-black mb-2">Question Types</label>
                 <div className="flex flex-wrap gap-2">
                   {QUESTION_TYPES.map((qt) => (
                     <button
@@ -190,8 +192,8 @@ const AssignmentGenerator = () => {
                       onClick={() => toggleQuestionType(qt.value)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         form.questionTypes.includes(qt.value)
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+                          ? 'bg-[#FF5841] text-white border-[#FF5841]'
+                          : 'bg-white text-stone-600 border-stone-200 hover:border-black'
                       }`}
                     >
                       {qt.label}
@@ -203,7 +205,7 @@ const AssignmentGenerator = () => {
               <button
                 type="submit"
                 disabled={loading || form.questionTypes.length === 0}
-                className="w-full py-3 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 bg-[#FF5841] text-white text-sm font-medium rounded-lg hover:bg-[#e04d38] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Generating...' : 'Generate Assignment'}
               </button>
@@ -227,31 +229,26 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
 
   return (
     <div className="space-y-4">
-      {/* Header card */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6">
-        <div className="flex items-start justify-between">
+      <div className="bg-white border border-stone-200 rounded-2xl p-6">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{output.title}</h2>
-            <div className="flex gap-3 mt-2 text-sm text-gray-500">
-              <span>{output.subject}</span>
-              <span>·</span>
-              <span>{output.gradeLevel}</span>
-              <span>·</span>
-              <span>{output.totalMarks} marks</span>
-              <span>·</span>
-              <span>{output.estimatedTime}</span>
+            <h2 className="text-xl font-bold text-black">{output.title}</h2>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {[output.subject, output.gradeLevel, `${output.totalMarks} marks`, output.estimatedTime].map((tag) => (
+                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full">{tag}</span>
+              ))}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={onToggleAnswers}
-              className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors"
             >
               {showAnswers ? 'Hide Answers' : 'Show Answers'}
             </button>
             <button
               onClick={onRegenerate}
-              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors"
             >
               Regenerate
             </button>
@@ -259,23 +256,22 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
         </div>
       </div>
 
-      {/* Questions */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-6">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Questions</h3>
+      <div className="bg-white border border-stone-200 rounded-2xl p-6 space-y-6">
+        <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Questions</h3>
         {output.questions?.map((q, i) => (
-          <div key={q.id} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0">
+          <div key={q.id} className="pb-6 border-b border-stone-100 last:border-0 last:pb-0">
             <div className="flex items-start gap-3">
-              <span className="text-sm font-semibold text-indigo-600 mt-0.5">{i + 1}.</span>
+              <span className="text-sm font-bold text-[#FF5841] mt-0.5 shrink-0">{i + 1}.</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm text-gray-900">{q.question}</p>
-                  <span className="shrink-0 text-xs text-gray-400">[{q.marks} mark{q.marks > 1 ? 's' : ''}]</span>
+                  <p className="text-sm text-black">{q.question}</p>
+                  <span className="shrink-0 text-xs text-stone-400">[{q.marks} mark{q.marks > 1 ? 's' : ''}]</span>
                 </div>
 
                 {q.options && (
                   <ul className="mt-2 space-y-1">
                     {q.options.map((opt, j) => (
-                      <li key={j} className="text-sm text-gray-600 flex gap-2">
+                      <li key={j} className="text-sm text-stone-600 flex gap-2">
                         <span className="font-medium">{String.fromCharCode(65 + j)}.</span>
                         <span>{opt}</span>
                       </li>
@@ -284,10 +280,10 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
                 )}
 
                 {showAnswers && (
-                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm font-medium text-green-800">Answer: {q.answer}</p>
+                  <div className="mt-3 p-3 bg-orange-50 border border-orange-100 rounded-lg">
+                    <p className="text-sm font-medium text-black">Answer: <span className="text-[#FF5841]">{q.answer}</span></p>
                     {q.explanation && (
-                      <p className="text-xs text-green-700 mt-1">{q.explanation}</p>
+                      <p className="text-xs text-stone-500 mt-1">{q.explanation}</p>
                     )}
                   </div>
                 )}
