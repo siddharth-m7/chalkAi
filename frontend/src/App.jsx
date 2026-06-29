@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
+import AssignmentGenerator from './pages/AssignmentGenerator'
 
 const App = () => {
   return (
@@ -26,6 +27,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/generate/assignment"
+            element={
+              <ProtectedRoute>
+                <AssignmentGenerator />
               </ProtectedRoute>
             }
           />
