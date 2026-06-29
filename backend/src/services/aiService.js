@@ -7,17 +7,6 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export const generateWithAI = async (systemPrompt, userPrompt) => {
   try {
-    const model = gemini.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: systemPrompt
-    })
-    const result = await model.generateContent(userPrompt)
-    const text = result.response.text()
-    logger.info('AI response from gemini')
-    return { text, provider: 'gemini' }
-  } catch (err) {
-    logger.warn(`Gemini failed, falling back to Groq: ${err.message}`)
-
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
@@ -28,6 +17,17 @@ export const generateWithAI = async (systemPrompt, userPrompt) => {
     const text = completion.choices[0].message.content
     logger.info('AI response from groq')
     return { text, provider: 'groq' }
+  } catch (err) {
+    logger.warn(`Groq failed, falling back to Gemini: ${err.message}`)
+
+    const model = gemini.getGenerativeModel({
+      model: 'gemini-3.5-flash',
+      systemInstruction: systemPrompt
+    })
+    const result = await model.generateContent(userPrompt)
+    const text = result.response.text()
+    logger.info('AI response from gemini')
+    return { text, provider: 'gemini' }
   }
 }
 

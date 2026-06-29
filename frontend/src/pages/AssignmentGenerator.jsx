@@ -113,13 +113,14 @@ const AssignmentGenerator = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Chapter</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Chapter <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
                 <input
                   type="text"
                   name="chapter"
                   value={form.chapter}
                   onChange={handleChange}
-                  required
                   placeholder="e.g. Chapter 3 – Laws of Motion"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
