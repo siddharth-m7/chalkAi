@@ -19,7 +19,7 @@ const features = [
     label: 'Lesson Plan',
     description: 'Generate structured weekly lesson plans',
     icon: '📅',
-    to: null,
+    to: '/generate/lesson-plan',
   },
   {
     label: 'Concept Explainer',

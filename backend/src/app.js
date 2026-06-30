@@ -12,12 +12,14 @@ import generateRoutes from './routes/generate.js'
 import libraryRoutes from './routes/library.js'
 import resourceRoutes from './routes/resources.js'
 import exportRoutes from './routes/export.js'
+import { startLessonPlanWorker } from './workers/lessonPlanWorker.js'
 
 const app = express()
 
 const start = async () => {
   await connectDB()
   await connectRedis()
+  startLessonPlanWorker()
 
   const { apiLimiter, generateLimiter } = createRateLimiters()
 
