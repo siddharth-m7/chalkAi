@@ -88,9 +88,9 @@ const Home = () => {
           </div>
 
           {/* Stats */}
-          <div className="inline-flex items-center divide-x divide-stone-100 bg-white border border-stone-200 rounded-2xl shadow-sm px-2">
+          <div className="inline-flex flex-wrap justify-center sm:flex-nowrap items-center sm:divide-x divide-stone-100 bg-white border border-stone-200 rounded-2xl shadow-sm px-2 gap-px sm:gap-0">
             {stats.map((stat) => (
-              <div key={stat.label} className="px-8 py-4 text-center">
+              <div key={stat.label} className="px-6 sm:px-8 py-4 text-center">
                 <p className="text-2xl font-bold text-black">{stat.value}</p>
                 <p className="text-xs text-stone-400 mt-0.5">{stat.label}</p>
               </div>
@@ -171,7 +171,7 @@ const Home = () => {
 
       {/* Footer */}
       <footer className="border-t border-stone-100 py-7 bg-white">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between text-xs text-stone-400">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-400">
           <span className="font-bold text-black">Chalk<span className="text-[#FF5841]">AI</span></span>
           <span>Built for educators, by developers who care about education.</span>
         </div>

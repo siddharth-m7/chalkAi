@@ -58,13 +58,13 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl">
+      <div className="max-w-2xl w-full">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-black">Your Profile</h1>
           <p className="text-stone-500 mt-1 text-sm">This helps personalize your AI-generated content</p>
         </div>
 
-        <div className="bg-white border border-stone-200 rounded-2xl p-8">
+        <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-8">
           {success && (
             <div className="mb-6 px-4 py-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
               Profile updated successfully

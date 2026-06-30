@@ -24,7 +24,7 @@ const inputCls = 'w-full px-3 py-2 border border-stone-200 rounded-lg text-sm fo
 
 const LessonPlanGenerator = () => {
   const [form, setForm] = useState(defaultForm)
-  const [status, setStatus] = useState('idle') // idle | queued | completed | failed
+  const [status, setStatus] = useState('idle')
   const [jobId, setJobId] = useState(null)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
@@ -34,7 +34,6 @@ const LessonPlanGenerator = () => {
   useEffect(() => {
     if (status !== 'queued' || !jobId) return
 
-    // 60s hard timeout
     timeoutRef.current = setTimeout(() => {
       clearInterval(intervalRef.current)
       setError('Generation timed out. The AI took too long to respond. Please try again.')
@@ -45,7 +44,6 @@ const LessonPlanGenerator = () => {
       try {
         const res = await api.get(`/generate/lesson-plan/status/${jobId}`)
         const { status: jobStatus, data, message } = res.data
-
         if (jobStatus === 'completed') {
           clearTimeout(timeoutRef.current)
           setResult(data)
@@ -102,13 +100,13 @@ const LessonPlanGenerator = () => {
   return (
     <Layout>
       <div className="max-w-3xl">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-black">Lesson Plan Generator</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-black">Lesson Plan Generator</h1>
           <p className="text-stone-500 mt-1 text-sm">Generate a structured weekly lesson plan with daily breakdowns</p>
         </div>
 
         {status === 'idle' || status === 'failed' ? (
-          <div className="bg-white border border-stone-200 rounded-2xl p-8">
+          <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-8">
             {error && (
               <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-start justify-between gap-4">
                 <span>{error}</span>
@@ -116,8 +114,9 @@ const LessonPlanGenerator = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">Subject</label>
                   <select name="subject" value={form.subject} onChange={handleChange} required className={inputCls}>
@@ -134,7 +133,7 @@ const LessonPlanGenerator = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
                     Chapter <span className="text-stone-400 font-normal">(optional)</span>
@@ -151,7 +150,7 @@ const LessonPlanGenerator = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
                     Week Starting <span className="text-stone-400 font-normal">(optional)</span>
@@ -165,8 +164,7 @@ const LessonPlanGenerator = () => {
                       <button key={d} type="button" onClick={() => setForm({ ...form, numberOfDays: d })}
                         className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors ${
                           form.numberOfDays === d ? 'bg-black text-white border-black' : 'bg-white text-stone-600 border-stone-200 hover:border-black'
-                        }`}
-                      >{d}</button>
+                        }`}>{d}</button>
                     ))}
                   </div>
                 </div>
@@ -174,13 +172,12 @@ const LessonPlanGenerator = () => {
 
               <div>
                 <label className="block text-sm font-medium text-black mb-2">Class Duration</label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {DURATIONS.map((d) => (
                     <button key={d} type="button" onClick={() => setForm({ ...form, classDuration: d })}
                       className={`px-4 py-2 rounded-lg text-xs font-medium border transition-colors ${
                         form.classDuration === d ? 'bg-black text-white border-black' : 'bg-white text-stone-600 border-stone-200 hover:border-black'
-                      }`}
-                    >{d} min</button>
+                      }`}>{d} min</button>
                   ))}
                 </div>
               </div>
@@ -220,7 +217,7 @@ const LessonPlanGenerator = () => {
 }
 
 const GeneratingState = () => (
-  <div className="bg-white border border-stone-200 rounded-2xl p-16 flex flex-col items-center justify-center text-center">
+  <div className="bg-white border border-stone-200 rounded-2xl p-12 sm:p-16 flex flex-col items-center justify-center text-center">
     <div className="w-12 h-12 border-4 border-stone-100 border-t-[#FF5841] rounded-full animate-spin mb-6" />
     <h2 className="text-base font-semibold text-black mb-2">Generating your lesson plan...</h2>
     <p className="text-sm text-stone-400 max-w-xs">
@@ -232,8 +229,6 @@ const GeneratingState = () => (
 const LessonPlanPreview = ({ content, onRegenerate }) => {
   const { output } = content
   const dayCount = output.days?.length || 0
-
-  // All days open by default
   const [openDays, setOpenDays] = useState(() => new Set(Array.from({ length: dayCount }, (_, i) => i)))
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -241,11 +236,8 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
   const allOpen = openDays.size === dayCount
 
   const toggleAll = () => {
-    if (allOpen) {
-      setOpenDays(new Set())
-    } else {
-      setOpenDays(new Set(Array.from({ length: dayCount }, (_, i) => i)))
-    }
+    if (allOpen) setOpenDays(new Set())
+    else setOpenDays(new Set(Array.from({ length: dayCount }, (_, i) => i)))
   }
 
   const toggleDay = (i) => {
@@ -256,7 +248,6 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
   }
 
   const handlePrint = () => {
-    // Expand all before printing so nothing is hidden
     setOpenDays(new Set(Array.from({ length: dayCount }, (_, i) => i)))
     setTimeout(() => window.print(), 150)
   }
@@ -267,7 +258,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
       await api.post('/library', { contentId: content._id, title: output.title })
       setSaved(true)
     } catch (err) {
-      if (err.response?.status === 409) setSaved(true) // already saved
+      if (err.response?.status === 409) setSaved(true)
     } finally {
       setSaving(false)
     }
@@ -284,10 +275,10 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-6 print:border-0 print:p-0">
-        <div className="flex items-start justify-between gap-4">
+      <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6 print:border-0 print:p-0">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-black">{output.title}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-black">{output.title}</h2>
             <div className="flex flex-wrap gap-2 mt-3">
               {tags.map((tag) => (
                 <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full">{tag}</span>
@@ -297,21 +288,18 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
               <p className="mt-4 text-sm text-stone-500 leading-relaxed">{output.overview}</p>
             )}
           </div>
-
-          <div className="flex flex-col gap-2 shrink-0 print:hidden">
+          <div className="flex sm:flex-col gap-2 shrink-0 print:hidden">
             <button onClick={onRegenerate}
-              className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+              className="flex-1 sm:flex-none px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
               Regenerate
             </button>
             <button onClick={handlePrint}
-              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors">
+              className="flex-1 sm:flex-none px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors">
               Print
             </button>
             <button onClick={handleSave} disabled={saving || saved}
-              className={`px-4 py-2 text-xs font-medium rounded-lg border transition-colors ${
-                saved
-                  ? 'border-green-200 bg-green-50 text-green-600'
-                  : 'border-stone-200 hover:bg-stone-50 text-stone-600'
+              className={`flex-1 sm:flex-none px-4 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                saved ? 'border-green-200 bg-green-50 text-green-600' : 'border-stone-200 hover:bg-stone-50 text-stone-600'
               } disabled:cursor-not-allowed`}>
               {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}
             </button>
@@ -321,18 +309,16 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
 
       {/* Days */}
       <div className="space-y-3">
-        {/* Expand / Collapse all */}
         <div className="flex justify-end print:hidden">
-          <button onClick={toggleAll}
-            className="text-xs text-stone-400 hover:text-black transition-colors font-medium">
+          <button onClick={toggleAll} className="text-xs text-stone-400 hover:text-black transition-colors font-medium">
             {allOpen ? 'Collapse all' : 'Expand all'}
           </button>
         </div>
 
         {output.days?.map((day, i) => (
-          <div key={i} className="bg-white border border-stone-200 rounded-2xl overflow-hidden print:border-0 print:border-b print:border-stone-200 print:rounded-none">
+          <div key={i} className="bg-white border border-stone-200 rounded-2xl overflow-hidden print:border-0 print:border-b print:rounded-none">
             <button type="button" onClick={() => toggleDay(i)}
-              className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-stone-50 transition-colors print:pointer-events-none print:hover:bg-white">
+              className="w-full flex items-center justify-between px-5 sm:px-6 py-4 text-left hover:bg-stone-50 transition-colors">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-xl bg-[#FF5841] text-white text-xs font-bold flex items-center justify-center shrink-0">
                   {day.day}
@@ -348,7 +334,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
             </button>
 
             {openDays.has(i) && (
-              <div className="px-6 pb-6 space-y-5 border-t border-stone-100">
+              <div className="px-5 sm:px-6 pb-6 space-y-5 border-t border-stone-100">
                 {day.objectives?.length > 0 && (
                   <div className="pt-4">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">Objectives</p>
@@ -369,7 +355,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
                     { label: 'Main Activity', value: day.mainActivity },
                     { label: 'Wrap Up', value: day.wrapUp }
                   ].map(({ label, value }) => value && (
-                    <div key={label} className="p-4 bg-stone-50 rounded-xl print:bg-white print:border print:border-stone-100">
+                    <div key={label} className="p-4 bg-stone-50 rounded-xl">
                       <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{label}</p>
                       <p className="text-sm text-stone-700 leading-relaxed">{value}</p>
                     </div>
