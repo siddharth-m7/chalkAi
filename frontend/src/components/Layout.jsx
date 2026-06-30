@@ -54,9 +54,11 @@ const Layout = ({ children }) => {
         {/* Profile — bottom left on desktop */}
         <div className="px-4 py-4 border-t border-stone-100">
           <div className="flex items-center gap-3 mb-3 px-1">
-            <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white font-semibold text-xs shrink-0">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
+            <img
+              src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(user?.email || 'user')}&backgroundColor=ffd5dc,b6e3f4,c0aede,ffdfbf`}
+              alt="avatar"
+              className="w-8 h-8 rounded-full shrink-0 bg-stone-100"
+            />
             <div className="min-w-0">
               <p className="text-xs font-semibold text-black truncate">{user?.name}</p>
               <p className="text-xs text-stone-400 truncate">{user?.email}</p>
