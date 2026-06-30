@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-stone-50">
       {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-stone-200 flex flex-col shrink-0">
+      <aside className="w-60 bg-white border-r border-stone-200 flex flex-col shrink-0 print:hidden">
         {/* Brand */}
         <div className="px-5 py-5 border-b border-stone-100">
           <NavLink to="/" className="text-lg font-bold text-black tracking-tight hover:opacity-70 transition-opacity">

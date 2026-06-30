@@ -5,6 +5,8 @@ import api from '../api/axios'
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
 const DURATIONS = [30, 45, 60, 90]
+const POLL_INTERVAL = 2500
+const POLL_TIMEOUT = 60000
 
 const defaultForm = {
   subject: '',
@@ -27,10 +29,17 @@ const LessonPlanGenerator = () => {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const intervalRef = useRef(null)
+  const timeoutRef = useRef(null)
 
-  // Poll for job status
   useEffect(() => {
     if (status !== 'queued' || !jobId) return
+
+    // 60s hard timeout
+    timeoutRef.current = setTimeout(() => {
+      clearInterval(intervalRef.current)
+      setError('Generation timed out. The AI took too long to respond. Please try again.')
+      setStatus('failed')
+    }, POLL_TIMEOUT)
 
     intervalRef.current = setInterval(async () => {
       try {
@@ -38,19 +47,25 @@ const LessonPlanGenerator = () => {
         const { status: jobStatus, data, message } = res.data
 
         if (jobStatus === 'completed') {
+          clearTimeout(timeoutRef.current)
           setResult(data)
           setStatus('completed')
         } else if (jobStatus === 'failed') {
+          clearTimeout(timeoutRef.current)
           setError(message || 'Generation failed. Please try again.')
           setStatus('failed')
         }
       } catch {
+        clearTimeout(timeoutRef.current)
         setError('Failed to check generation status.')
         setStatus('failed')
       }
-    }, 2500)
+    }, POLL_INTERVAL)
 
-    return () => clearInterval(intervalRef.current)
+    return () => {
+      clearInterval(intervalRef.current)
+      clearTimeout(timeoutRef.current)
+    }
   }, [status, jobId])
 
   const handleChange = (e) => {
@@ -77,6 +92,7 @@ const LessonPlanGenerator = () => {
 
   const handleReset = () => {
     clearInterval(intervalRef.current)
+    clearTimeout(timeoutRef.current)
     setStatus('idle')
     setJobId(null)
     setResult(null)
@@ -94,13 +110,13 @@ const LessonPlanGenerator = () => {
         {status === 'idle' || status === 'failed' ? (
           <div className="bg-white border border-stone-200 rounded-2xl p-8">
             {error && (
-              <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                {error}
+              <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-start justify-between gap-4">
+                <span>{error}</span>
+                <button onClick={() => setError('')} className="text-red-400 hover:text-red-600 shrink-0 text-lg leading-none">×</button>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Subject + Grade */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">Subject</label>
@@ -118,7 +134,6 @@ const LessonPlanGenerator = () => {
                 </div>
               </div>
 
-              {/* Chapter + Topic */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
@@ -136,7 +151,6 @@ const LessonPlanGenerator = () => {
                 </div>
               </div>
 
-              {/* Week start + Number of days */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
@@ -148,78 +162,49 @@ const LessonPlanGenerator = () => {
                   <label className="block text-sm font-medium text-black mb-1">Number of Days</label>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setForm({ ...form, numberOfDays: d })}
+                      <button key={d} type="button" onClick={() => setForm({ ...form, numberOfDays: d })}
                         className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors ${
-                          form.numberOfDays === d
-                            ? 'bg-black text-white border-black'
-                            : 'bg-white text-stone-600 border-stone-200 hover:border-black'
+                          form.numberOfDays === d ? 'bg-black text-white border-black' : 'bg-white text-stone-600 border-stone-200 hover:border-black'
                         }`}
-                      >
-                        {d}
-                      </button>
+                      >{d}</button>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Class Duration */}
               <div>
                 <label className="block text-sm font-medium text-black mb-2">Class Duration</label>
                 <div className="flex gap-2">
                   {DURATIONS.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setForm({ ...form, classDuration: d })}
+                    <button key={d} type="button" onClick={() => setForm({ ...form, classDuration: d })}
                       className={`px-4 py-2 rounded-lg text-xs font-medium border transition-colors ${
-                        form.classDuration === d
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white text-stone-600 border-stone-200 hover:border-black'
+                        form.classDuration === d ? 'bg-black text-white border-black' : 'bg-white text-stone-600 border-stone-200 hover:border-black'
                       }`}
-                    >
-                      {d} min
-                    </button>
+                    >{d} min</button>
                   ))}
                 </div>
               </div>
 
-              {/* Learning Objectives */}
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
                   Learning Objectives <span className="text-stone-400 font-normal">(optional)</span>
                 </label>
-                <textarea
-                  name="learningObjectives"
-                  value={form.learningObjectives}
-                  onChange={handleChange}
-                  rows={2}
-                  placeholder="e.g. Students should be able to explain the first law of thermodynamics..."
-                  className={inputCls + ' resize-none'}
-                />
+                <textarea name="learningObjectives" value={form.learningObjectives} onChange={handleChange}
+                  rows={2} placeholder="e.g. Students should be able to explain the first law of thermodynamics..."
+                  className={inputCls + ' resize-none'} />
               </div>
 
-              {/* Additional Info */}
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
                   Additional Instructions <span className="text-stone-400 font-normal">(optional)</span>
                 </label>
-                <textarea
-                  name="additionalInfo"
-                  value={form.additionalInfo}
-                  onChange={handleChange}
-                  rows={2}
-                  placeholder="e.g. Include group activities, focus on practical examples..."
-                  className={inputCls + ' resize-none'}
-                />
+                <textarea name="additionalInfo" value={form.additionalInfo} onChange={handleChange}
+                  rows={2} placeholder="e.g. Include group activities, focus on practical examples..."
+                  className={inputCls + ' resize-none'} />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#FF5841] text-white text-sm font-medium rounded-lg hover:bg-[#e04d38] transition-colors"
-              >
+              <button type="submit"
+                className="w-full py-3 bg-[#FF5841] text-white text-sm font-medium rounded-lg hover:bg-[#e04d38] transition-colors">
                 Generate Lesson Plan
               </button>
             </form>
@@ -246,7 +231,47 @@ const GeneratingState = () => (
 
 const LessonPlanPreview = ({ content, onRegenerate }) => {
   const { output } = content
-  const [openDay, setOpenDay] = useState(0)
+  const dayCount = output.days?.length || 0
+
+  // All days open by default
+  const [openDays, setOpenDays] = useState(() => new Set(Array.from({ length: dayCount }, (_, i) => i)))
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const allOpen = openDays.size === dayCount
+
+  const toggleAll = () => {
+    if (allOpen) {
+      setOpenDays(new Set())
+    } else {
+      setOpenDays(new Set(Array.from({ length: dayCount }, (_, i) => i)))
+    }
+  }
+
+  const toggleDay = (i) => {
+    const next = new Set(openDays)
+    if (next.has(i)) next.delete(i)
+    else next.add(i)
+    setOpenDays(next)
+  }
+
+  const handlePrint = () => {
+    // Expand all before printing so nothing is hidden
+    setOpenDays(new Set(Array.from({ length: dayCount }, (_, i) => i)))
+    setTimeout(() => window.print(), 150)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await api.post('/library', { contentId: content._id, title: output.title })
+      setSaved(true)
+    } catch (err) {
+      if (err.response?.status === 409) setSaved(true) // already saved
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const tags = [
     output.subject,
@@ -259,40 +284,55 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-6">
+      <div className="bg-white border border-stone-200 rounded-2xl p-6 print:border-0 print:p-0">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-black">{output.title}</h2>
             <div className="flex flex-wrap gap-2 mt-3">
               {tags.map((tag) => (
-                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full">
-                  {tag}
-                </span>
+                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full">{tag}</span>
               ))}
             </div>
             {output.overview && (
               <p className="mt-4 text-sm text-stone-500 leading-relaxed">{output.overview}</p>
             )}
           </div>
-          <button
-            onClick={onRegenerate}
-            className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors shrink-0"
-          >
-            Regenerate
-          </button>
+
+          <div className="flex flex-col gap-2 shrink-0 print:hidden">
+            <button onClick={onRegenerate}
+              className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+              Regenerate
+            </button>
+            <button onClick={handlePrint}
+              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors">
+              Print
+            </button>
+            <button onClick={handleSave} disabled={saving || saved}
+              className={`px-4 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                saved
+                  ? 'border-green-200 bg-green-50 text-green-600'
+                  : 'border-stone-200 hover:bg-stone-50 text-stone-600'
+              } disabled:cursor-not-allowed`}>
+              {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Day cards */}
+      {/* Days */}
       <div className="space-y-3">
+        {/* Expand / Collapse all */}
+        <div className="flex justify-end print:hidden">
+          <button onClick={toggleAll}
+            className="text-xs text-stone-400 hover:text-black transition-colors font-medium">
+            {allOpen ? 'Collapse all' : 'Expand all'}
+          </button>
+        </div>
+
         {output.days?.map((day, i) => (
-          <div key={i} className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
-            {/* Day header — clickable to expand */}
-            <button
-              type="button"
-              onClick={() => setOpenDay(openDay === i ? -1 : i)}
-              className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-stone-50 transition-colors"
-            >
+          <div key={i} className="bg-white border border-stone-200 rounded-2xl overflow-hidden print:border-0 print:border-b print:border-stone-200 print:rounded-none">
+            <button type="button" onClick={() => toggleDay(i)}
+              className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-stone-50 transition-colors print:pointer-events-none print:hover:bg-white">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-xl bg-[#FF5841] text-white text-xs font-bold flex items-center justify-center shrink-0">
                   {day.day}
@@ -302,12 +342,13 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
                   <p className="text-xs text-stone-400">{day.topic}</p>
                 </div>
               </div>
-              <span className="text-stone-300 text-lg leading-none">{openDay === i ? '−' : '+'}</span>
+              <span className="text-stone-300 text-lg leading-none print:hidden">
+                {openDays.has(i) ? '−' : '+'}
+              </span>
             </button>
 
-            {openDay === i && (
+            {openDays.has(i) && (
               <div className="px-6 pb-6 space-y-5 border-t border-stone-100">
-                {/* Objectives */}
                 {day.objectives?.length > 0 && (
                   <div className="pt-4">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">Objectives</p>
@@ -322,21 +363,19 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
                   </div>
                 )}
 
-                {/* Activities */}
                 <div className="grid grid-cols-1 gap-3">
                   {[
                     { label: 'Warm Up', value: day.warmUp },
                     { label: 'Main Activity', value: day.mainActivity },
                     { label: 'Wrap Up', value: day.wrapUp }
                   ].map(({ label, value }) => value && (
-                    <div key={label} className="p-4 bg-stone-50 rounded-xl">
+                    <div key={label} className="p-4 bg-stone-50 rounded-xl print:bg-white print:border print:border-stone-100">
                       <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">{label}</p>
                       <p className="text-sm text-stone-700 leading-relaxed">{value}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Materials */}
                 {day.materials?.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">Materials</p>
@@ -348,7 +387,6 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
                   </div>
                 )}
 
-                {/* Homework */}
                 {day.homework && (
                   <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl">
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Homework</p>
