@@ -8,20 +8,48 @@ const QUESTION_TYPES = [
   { value: 'mcq', label: 'Multiple Choice' },
   { value: 'short_answer', label: 'Short Answer' },
   { value: 'long_answer', label: 'Long Answer' },
-  { value: 'true_false', label: 'True / False' }
+  { value: 'true_false', label: 'True / False' },
+  { value: 'numerical', label: 'Numerical Problems' },
 ]
 
 const defaultForm = {
+  title: '',
   subject: '',
   gradeLevel: '',
   chapter: '',
   topic: '',
-  numberOfQuestions: 10,
+  dueDate: '',
   difficulty: 'medium',
-  questionTypes: ['mcq']
+  questionSections: [
+    { type: 'mcq', count: 5, marksPerQuestion: 2 },          // 10 marks
+    { type: 'true_false', count: 5, marksPerQuestion: 2 },   // 10 marks
+    { type: 'short_answer', count: 5, marksPerQuestion: 3 }, // 15 marks
+    { type: 'long_answer', count: 3, marksPerQuestion: 5 },  // 15 marks
+  ],
+  additionalInfo: ''
 }
 
 const inputCls = 'w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5841]/40 focus:border-[#FF5841]'
+
+const Counter = ({ value, onChange, min = 1, max = 20 }) => (
+  <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden">
+    <button
+      type="button"
+      onClick={() => onChange(Math.max(min, value - 1))}
+      className="w-8 h-8 flex items-center justify-center text-stone-400 hover:bg-stone-50 transition-colors text-base leading-none"
+    >
+      −
+    </button>
+    <span className="w-8 text-center text-sm font-semibold text-black">{value}</span>
+    <button
+      type="button"
+      onClick={() => onChange(Math.min(max, value + 1))}
+      className="w-8 h-8 flex items-center justify-center text-stone-400 hover:bg-stone-50 transition-colors text-base leading-none"
+    >
+      +
+    </button>
+  </div>
+)
 
 const AssignmentGenerator = () => {
   const [form, setForm] = useState(defaultForm)
@@ -35,13 +63,29 @@ const AssignmentGenerator = () => {
     setForm({ ...form, [name]: value })
   }
 
-  const toggleQuestionType = (value) => {
-    const current = form.questionTypes
-    const updated = current.includes(value)
-      ? current.filter((t) => t !== value)
-      : [...current, value]
-    setForm({ ...form, questionTypes: updated })
+  const addSection = () => {
+    setForm({
+      ...form,
+      questionSections: [...form.questionSections, { type: 'short_answer', count: 3, marksPerQuestion: 2 }]
+    })
   }
+
+  const removeSection = (index) => {
+    setForm({
+      ...form,
+      questionSections: form.questionSections.filter((_, i) => i !== index)
+    })
+  }
+
+  const updateSection = (index, field, value) => {
+    const updated = form.questionSections.map((s, i) =>
+      i === index ? { ...s, [field]: value } : s
+    )
+    setForm({ ...form, questionSections: updated })
+  }
+
+  const totalQuestions = form.questionSections.reduce((sum, s) => sum + s.count, 0)
+  const totalMarks = form.questionSections.reduce((sum, s) => sum + s.count * s.marksPerQuestion, 0)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -49,10 +93,7 @@ const AssignmentGenerator = () => {
     setResult(null)
     setLoading(true)
     try {
-      const res = await api.post('/generate/assignment', {
-        ...form,
-        numberOfQuestions: Number(form.numberOfQuestions)
-      })
+      const res = await api.post('/generate/assignment', form)
       setResult(res.data.data)
       setShowAnswers(false)
     } catch (err) {
@@ -84,83 +125,84 @@ const AssignmentGenerator = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Assignment Title <span className="text-stone-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  placeholder="e.g. Chapter 3 Test – Laws of Motion"
+                  className={inputCls}
+                />
+              </div>
+
+              {/* Subject + Grade */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">Subject</label>
-                  <select
-                    name="subject"
-                    value={form.subject}
-                    onChange={handleChange}
-                    required
-                    className={inputCls}
-                  >
+                  <select name="subject" value={form.subject} onChange={handleChange} required className={inputCls}>
                     <option value="">Select subject</option>
                     {SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">Grade Level</label>
-                  <select
-                    name="gradeLevel"
-                    value={form.gradeLevel}
-                    onChange={handleChange}
-                    required
-                    className={inputCls}
-                  >
+                  <select name="gradeLevel" value={form.gradeLevel} onChange={handleChange} required className={inputCls}>
                     <option value="">Select grade</option>
                     {GRADE_LEVELS.map((g) => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Chapter <span className="text-stone-400 font-normal">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  name="chapter"
-                  value={form.chapter}
-                  onChange={handleChange}
-                  placeholder="e.g. Chapter 3 – Laws of Motion"
-                  className={inputCls}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Topic <span className="text-stone-400 font-normal">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  name="topic"
-                  value={form.topic}
-                  onChange={handleChange}
-                  placeholder="e.g. Newton's Second Law"
-                  className={inputCls}
-                />
-              </div>
-
+              {/* Chapter + Topic */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
-                    Number of Questions — <span className="text-[#FF5841] font-semibold">{form.numberOfQuestions}</span>
+                    Chapter <span className="text-stone-400 font-normal">(optional)</span>
                   </label>
                   <input
-                    type="range"
-                    name="numberOfQuestions"
-                    min="1"
-                    max="20"
-                    value={form.numberOfQuestions}
+                    type="text"
+                    name="chapter"
+                    value={form.chapter}
                     onChange={handleChange}
-                    className="w-full accent-[#FF5841]"
+                    placeholder="e.g. Chapter 3 – Laws of Motion"
+                    className={inputCls}
                   />
-                  <div className="flex justify-between text-xs text-stone-400 mt-1">
-                    <span>1</span><span>20</span>
-                  </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    Topic <span className="text-stone-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="topic"
+                    value={form.topic}
+                    onChange={handleChange}
+                    placeholder="e.g. Newton's Second Law"
+                    className={inputCls}
+                  />
+                </div>
+              </div>
 
+              {/* Due Date + Difficulty */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    Due Date <span className="text-stone-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="dueDate"
+                    value={form.dueDate}
+                    onChange={handleChange}
+                    className={inputCls}
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">Difficulty</label>
                   <div className="flex gap-2">
@@ -182,29 +224,91 @@ const AssignmentGenerator = () => {
                 </div>
               </div>
 
+              {/* Question Sections */}
               <div>
-                <label className="block text-sm font-medium text-black mb-2">Question Types</label>
-                <div className="flex flex-wrap gap-2">
-                  {QUESTION_TYPES.map((qt) => (
-                    <button
-                      key={qt.value}
-                      type="button"
-                      onClick={() => toggleQuestionType(qt.value)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                        form.questionTypes.includes(qt.value)
-                          ? 'bg-[#FF5841] text-white border-[#FF5841]'
-                          : 'bg-white text-stone-600 border-stone-200 hover:border-black'
-                      }`}
-                    >
-                      {qt.label}
-                    </button>
+                <label className="block text-sm font-medium text-black mb-3">Question Sections</label>
+                <div className="space-y-3">
+
+                  {/* Header row */}
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-center px-1">
+                    <span className="text-xs text-stone-400 font-medium">Question Type</span>
+                    <span className="text-xs text-stone-400 font-medium w-28 text-center">No. of Questions</span>
+                    <span className="text-xs text-stone-400 font-medium w-28 text-center">Marks Each</span>
+                  </div>
+
+                  {form.questionSections.map((section, index) => (
+                    <div key={index} className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
+                      <select
+                        value={section.type}
+                        onChange={(e) => updateSection(index, 'type', e.target.value)}
+                        className={inputCls}
+                      >
+                        {QUESTION_TYPES.map((qt) => (
+                          <option key={qt.value} value={qt.value}>{qt.label}</option>
+                        ))}
+                      </select>
+
+                      <div className="w-28 flex justify-center">
+                        <Counter
+                          value={section.count}
+                          onChange={(v) => updateSection(index, 'count', v)}
+                        />
+                      </div>
+
+                      <div className="w-28 flex justify-center">
+                        <Counter
+                          value={section.marksPerQuestion}
+                          onChange={(v) => updateSection(index, 'marksPerQuestion', v)}
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeSection(index)}
+                        disabled={form.questionSections.length === 1}
+                        className="text-stone-300 hover:text-red-400 disabled:opacity-0 transition-colors text-xl leading-none w-6 text-center"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
+
+                {/* Add section + totals */}
+                <div className="flex items-center justify-between mt-4">
+                  <button
+                    type="button"
+                    onClick={addSection}
+                    className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-black transition-colors font-medium"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-xs leading-none transition-colors">+</span>
+                    Add question type
+                  </button>
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-stone-500">Total Questions: <span className="font-semibold text-black">{totalQuestions}</span></span>
+                    <span className="text-stone-500">Total Marks: <span className="font-semibold text-[#FF5841]">{totalMarks}</span></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Additional Instructions <span className="text-stone-400 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  name="additionalInfo"
+                  value={form.additionalInfo}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="e.g. Make it suitable for a 1-hour exam, focus on application-based questions..."
+                  className={inputCls + ' resize-none'}
+                />
               </div>
 
               <button
                 type="submit"
-                disabled={loading || form.questionTypes.length === 0}
+                disabled={loading}
                 className="w-full py-3 bg-[#FF5841] text-white text-sm font-medium rounded-lg hover:bg-[#e04d38] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Generating...' : 'Generate Assignment'}
@@ -227,6 +331,15 @@ const AssignmentGenerator = () => {
 const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate }) => {
   const { output } = content
 
+  const tags = [
+    output.subject,
+    output.gradeLevel,
+    output.difficulty,
+    `${output.totalMarks} marks`,
+    output.estimatedTime,
+    output.dueDate ? `Due: ${output.dueDate}` : null
+  ].filter(Boolean)
+
   return (
     <div className="space-y-4">
       <div className="bg-white border border-stone-200 rounded-2xl p-6">
@@ -234,8 +347,10 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
           <div>
             <h2 className="text-xl font-bold text-black">{output.title}</h2>
             <div className="flex flex-wrap gap-2 mt-3">
-              {[output.subject, output.gradeLevel, `${output.totalMarks} marks`, output.estimatedTime].map((tag) => (
-                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full">{tag}</span>
+              {tags.map((tag) => (
+                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full capitalize">
+                  {tag}
+                </span>
               ))}
             </div>
           </div>
@@ -263,9 +378,9 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
             <div className="flex items-start gap-3">
               <span className="text-sm font-bold text-[#FF5841] mt-0.5 shrink-0">{i + 1}.</span>
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm text-black">{q.question}</p>
-                  <span className="shrink-0 text-xs text-stone-400">[{q.marks} mark{q.marks > 1 ? 's' : ''}]</span>
+                <div className="flex items-start gap-2 mb-1">
+                  <p className="text-sm text-black flex-1">{q.question}</p>
+                  <span className="shrink-0 text-xs text-stone-400 mt-0.5">[{q.marks} mark{q.marks > 1 ? 's' : ''}]</span>
                 </div>
 
                 {q.options && (
@@ -281,7 +396,9 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
 
                 {showAnswers && (
                   <div className="mt-3 p-3 bg-orange-50 border border-orange-100 rounded-lg">
-                    <p className="text-sm font-medium text-black">Answer: <span className="text-[#FF5841]">{q.answer}</span></p>
+                    <p className="text-sm font-medium text-black">
+                      Answer: <span className="text-[#FF5841]">{q.answer}</span>
+                    </p>
                     {q.explanation && (
                       <p className="text-xs text-stone-500 mt-1">{q.explanation}</p>
                     )}
