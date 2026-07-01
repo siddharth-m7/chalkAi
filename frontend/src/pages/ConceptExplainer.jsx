@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../api/axios'
+import { useExport } from '../hooks/useExport'
+import ExportPreviewModal from '../components/ExportPreviewModal'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
@@ -137,6 +139,7 @@ const ConceptExplainer = () => {
 const ConceptResult = ({ content, onReset }) => {
   const { output } = content
   const [activeTab, setActiveTab] = useState(0)
+  const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.concept)
 
   const explanations = output.explanations || []
   const successful = explanations.filter((e) => e.success)
@@ -146,6 +149,8 @@ const ConceptResult = ({ content, onReset }) => {
 
   return (
     <div className="space-y-4">
+      <ExportPreviewModal preview={preview} onClose={closePreview} onDownload={downloadFromPreview} />
+
       {/* Header */}
       <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">
@@ -160,12 +165,20 @@ const ConceptResult = ({ content, onReset }) => {
               </span>
             </div>
           </div>
-          <button
-            onClick={onReset}
-            className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors shrink-0"
-          >
-            New concept
-          </button>
+          <div className="flex gap-2 shrink-0">
+            <button onClick={() => exportAs('pdf')} disabled={!!exporting}
+              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors disabled:opacity-50">
+              {exporting === 'pdf' ? 'Exporting...' : 'Export as PDF'}
+            </button>
+            <button onClick={() => exportAs('docx')} disabled={!!exporting}
+              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors disabled:opacity-50">
+              {exporting === 'docx' ? 'Exporting...' : 'Export as Word'}
+            </button>
+            <button onClick={onReset}
+              className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+              New concept
+            </button>
+          </div>
         </div>
       </div>
 

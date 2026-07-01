@@ -2,6 +2,7 @@ import Joi from 'joi'
 
 export const assignmentSchema = Joi.object({
   title: Joi.string().trim().max(200).allow('').optional(),
+  schoolName: Joi.string().trim().max(200).allow('').optional(),
   subject: Joi.string().trim().required(),
   gradeLevel: Joi.string().trim().required(),
   chapter: Joi.string().trim().allow('').optional(),

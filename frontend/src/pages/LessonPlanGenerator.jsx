@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import Layout from '../components/Layout'
 import api from '../api/axios'
+import { useExport } from '../hooks/useExport'
+import ExportPreviewModal from '../components/ExportPreviewModal'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
@@ -232,6 +234,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
   const [openDays, setOpenDays] = useState(() => new Set(Array.from({ length: dayCount }, (_, i) => i)))
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.title)
 
   const allOpen = openDays.size === dayCount
 
@@ -274,6 +277,8 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
 
   return (
     <div className="space-y-4">
+      <ExportPreviewModal preview={preview} onClose={closePreview} onDownload={downloadFromPreview} />
+
       {/* Header */}
       <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6 print:border-0 print:p-0">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -290,15 +295,23 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
           </div>
           <div className="flex sm:flex-col gap-2 shrink-0 print:hidden">
             <button onClick={onRegenerate}
-              className="flex-1 sm:flex-none px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+              className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
               Regenerate
             </button>
+            <button onClick={() => exportAs('pdf')} disabled={!!exporting}
+              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors disabled:opacity-50">
+              {exporting === 'pdf' ? 'Exporting...' : 'Export as PDF'}
+            </button>
+            <button onClick={() => exportAs('docx')} disabled={!!exporting}
+              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors disabled:opacity-50">
+              {exporting === 'docx' ? 'Exporting...' : 'Export as Word'}
+            </button>
             <button onClick={handlePrint}
-              className="flex-1 sm:flex-none px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors">
+              className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors">
               Print
             </button>
             <button onClick={handleSave} disabled={saving || saved}
-              className={`flex-1 sm:flex-none px-4 py-2 text-xs font-medium rounded-lg border transition-colors ${
+              className={`px-4 py-2 text-xs font-medium rounded-lg border transition-colors ${
                 saved ? 'border-green-200 bg-green-50 text-green-600' : 'border-stone-200 hover:bg-stone-50 text-stone-600'
               } disabled:cursor-not-allowed`}>
               {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../api/axios'
+import { useExport } from '../hooks/useExport'
+import ExportPreviewModal from '../components/ExportPreviewModal'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
@@ -14,6 +16,7 @@ const QUESTION_TYPES = [
 
 const defaultForm = {
   title: '',
+  schoolName: '',
   subject: '',
   gradeLevel: '',
   chapter: '',
@@ -108,12 +111,21 @@ const AssignmentGenerator = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
 
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Assignment Title <span className="text-stone-400 font-normal">(optional)</span>
-                </label>
-                <input type="text" name="title" value={form.title} onChange={handleChange}
-                  placeholder="e.g. Chapter 3 Test – Laws of Motion" className={inputCls} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    Assignment Title <span className="text-stone-400 font-normal">(optional)</span>
+                  </label>
+                  <input type="text" name="title" value={form.title} onChange={handleChange}
+                    placeholder="e.g. Chapter 3 Test – Laws of Motion" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    School Name <span className="text-stone-400 font-normal">(optional)</span>
+                  </label>
+                  <input type="text" name="schoolName" value={form.schoolName} onChange={handleChange}
+                    placeholder="e.g. St. Mary's High School" className={inputCls} />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -253,6 +265,7 @@ const AssignmentGenerator = () => {
 
 const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate }) => {
   const { output } = content
+  const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.title)
 
   const tags = [
     output.subject,
@@ -265,24 +278,48 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
 
   return (
     <div className="space-y-4">
+      <ExportPreviewModal preview={preview} onClose={closePreview} onDownload={downloadFromPreview} />
+
       <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-black">{output.title}</h2>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {tags.map((tag) => (
-                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full capitalize">{tag}</span>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-2 sm:shrink-0">
-            <button onClick={onToggleAnswers}
-              className="flex-1 sm:flex-none px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors">
-              {showAnswers ? 'Hide Answers' : 'Show Answers'}
+        {/* Title + Regenerate */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <h2 className="text-xl font-bold text-black leading-tight">{output.title}</h2>
+          <button onClick={onRegenerate}
+            className="shrink-0 px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+            Regenerate
+          </button>
+        </div>
+
+        {/* Tags row */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tags.map((tag) => (
+            <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-600 text-xs font-medium rounded-full capitalize">{tag}</span>
+          ))}
+        </div>
+
+        {/* Action bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-stone-100">
+          <button onClick={onToggleAnswers}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+              showAnswers
+                ? 'bg-stone-100 border-stone-200 text-stone-700'
+                : 'border-stone-200 text-stone-500 hover:bg-stone-50'
+            }`}>
+            {showAnswers ? '✓ Answers shown' : 'Show Answers'}
+          </button>
+
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => exportAs('pdf', false)} disabled={!!exporting}
+              className="px-3 py-1.5 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors disabled:opacity-50 flex items-center gap-1.5">
+              <span>↓</span>{exporting === 'pdf' ? 'Loading...' : 'PDF'}
             </button>
-            <button onClick={onRegenerate}
-              className="flex-1 sm:flex-none px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
-              Regenerate
+            <button onClick={() => exportAs('pdf', true)} disabled={!!exporting}
+              className="px-3 py-1.5 text-xs font-medium border border-blue-200 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors disabled:opacity-50 flex items-center gap-1.5">
+              <span>↓</span>{exporting === 'pdf' ? 'Loading...' : 'PDF with Answers'}
+            </button>
+            <button onClick={() => exportAs('docx', false)} disabled={!!exporting}
+              className="px-3 py-1.5 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors disabled:opacity-50 flex items-center gap-1.5">
+              <span>↓</span>{exporting === 'docx' ? 'Exporting...' : 'Word'}
             </button>
           </div>
         </div>
