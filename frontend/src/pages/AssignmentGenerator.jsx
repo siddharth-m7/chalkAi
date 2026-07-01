@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import api from '../api/axios'
 import { useExport } from '../hooks/useExport'
@@ -33,24 +34,86 @@ const defaultForm = {
   additionalInfo: ''
 }
 
-const inputCls = 'w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5841]/40 focus:border-[#FF5841]'
+const inputCls = 'w-full h-9 px-3 bg-white border border-sand rounded-md text-sm text-charcoal placeholder-charcoal/35 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition-colors'
 
 const Counter = ({ value, onChange, min = 1, max = 20 }) => (
   <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden">
     <button type="button" onClick={() => onChange(Math.max(min, value - 1))}
-      className="w-8 h-8 flex items-center justify-center text-stone-400 hover:bg-stone-50 transition-colors text-base leading-none">−</button>
+      className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-50 transition-colors text-base leading-none">−</button>
     <span className="w-8 text-center text-sm font-semibold text-black">{value}</span>
     <button type="button" onClick={() => onChange(Math.min(max, value + 1))}
-      className="w-8 h-8 flex items-center justify-center text-stone-400 hover:bg-stone-50 transition-colors text-base leading-none">+</button>
+      className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-50 transition-colors text-base leading-none">+</button>
   </div>
 )
 
+// ── Recent assignment card (landing page) ───────────────────────────────────
+const RecentAssignmentCard = ({ item }) => {
+  const contentId = item.contentId?._id || item.contentId
+  const output = item.contentId?.output || {}
+  const title = output.title || 'Untitled'
+  const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(contentId, title)
+
+  const date = new Date(item.createdAt).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric'
+  })
+  const tags = [output.subject, output.gradeLevel, output.difficulty].filter(Boolean)
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 flex flex-col gap-3">
+      <ExportPreviewModal preview={preview} onClose={closePreview} onDownload={downloadFromPreview} />
+      <div>
+        <p className="text-xs text-charcoal/80 mb-1">{date}</p>
+        <h3 className="text-sm font-semibold text-charcoal leading-snug line-clamp-2">{title}</h3>
+      </div>
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map(tag => (
+            <span key={tag} className="px-2 py-0.5 bg-sand text-charcoal/80 text-xs rounded-full capitalize">{tag}</span>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-1.5 pt-2 border-t border-stone-100 mt-auto">
+        <button onClick={() => exportAs('pdf', false)} disabled={!!exporting}
+          className="flex-1 py-1.5 text-xs font-medium border border-sand rounded-md hover:bg-sand/60 text-charcoal/80 transition-colors disabled:opacity-50">
+          {exporting === 'pdf' ? '...' : 'PDF'}
+        </button>
+        <button onClick={() => exportAs('pdf', true)} disabled={!!exporting}
+          className="flex-1 py-1.5 text-xs font-medium border border-slate/30 rounded-md hover:bg-slate/10 text-slate transition-colors disabled:opacity-50">
+          PDF + Ans
+        </button>
+        <button onClick={() => exportAs('docx', false)} disabled={!!exporting}
+          className="flex-1 py-1.5 text-xs font-medium border border-sand rounded-md hover:bg-sand/60 text-charcoal/80 transition-colors disabled:opacity-50">
+          {exporting === 'docx' ? '...' : 'Word'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 const AssignmentGenerator = () => {
+  const navigate = useNavigate()
+  // 'landing' | 'form' | 'result'
+  const [phase, setPhase] = useState('landing')
   const [form, setForm] = useState(defaultForm)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showAnswers, setShowAnswers] = useState(false)
+  const [recent, setRecent] = useState([])
+  const [loadingRecent, setLoadingRecent] = useState(true)
+
+  useEffect(() => {
+    api.get('/library')
+      .then(res => {
+        const items = (res.data.data || [])
+          .filter(i => i.itemType === 'assignment')
+          .slice(0, 4)
+        setRecent(items)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingRecent(false))
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -82,6 +145,7 @@ const AssignmentGenerator = () => {
       const res = await api.post('/generate/assignment', form)
       setResult(res.data.data)
       setShowAnswers(false)
+      setPhase('result')
     } catch (err) {
       setError(err.response?.data?.message || 'Generation failed. Please try again.')
     } finally {
@@ -92,20 +156,93 @@ const AssignmentGenerator = () => {
   const handleRegenerate = () => {
     setResult(null)
     setError('')
+    setPhase('form')
   }
 
+
+  // ── Landing ──────────────────────────────────────────────────────────────
+  if (phase === 'landing') {
+    return (
+      <Layout>
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-8">
+            <div className="mb-8 flex items-start justify-between gap-4">
+              <div>
+                <button
+                  onClick={() => navigate(-1)}
+                  className="flex items-center gap-1.5 text-xs text-charcoal/75 hover:text-charcoal transition-colors mb-2 font-medium"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 5l-7 7 7 7" />
+                  </svg>
+                  Back
+                </button>
+                <h1 className="font-serif text-3xl text-charcoal">Assignment Generator</h1>
+                <p className="text-sm text-charcoal/75 mt-1">Generate custom assignments with questions and answer keys</p>
+              </div>
+              <button
+                onClick={() => setPhase('form')}
+                className="flex items-center gap-2 px-4 h-10 bg-slate text-white text-sm font-medium rounded-lg hover:bg-slate-dark transition-colors shrink-0"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                New Assignment
+              </button>
+            </div>
+
+            {/* Recent assignments */}
+            {loadingRecent ? (
+              <div>
+                <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-charcoal/85 mb-3">Recent</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-4 animate-pulse space-y-3">
+                      <div className="h-3 bg-gray-200 rounded w-1/4" />
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : recent.length > 0 ? (
+              <div>
+                <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-charcoal/85 mb-3">Recent Assignments</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {recent.map(item => (
+                    <RecentAssignmentCard key={item._id} item={item} />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  // ── Form / Result ────────────────────────────────────────────────────────
   return (
     <Layout>
-      <div className="max-w-3xl">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-black">Assignment Generator</h1>
-          <p className="text-stone-500 mt-1 text-sm">Generate custom assignments with questions and answer keys</p>
-        </div>
-
-        {!result ? (
-          <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-8">
+      <div className="max-w-3xl mx-auto">
+        {phase === 'form' ? (
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 sm:p-8">
+            <div className="mb-6 pb-5 border-b border-gray-100 flex items-center gap-3">
+              <button
+                onClick={() => { setPhase('landing'); setResult(null); setError('') }}
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-charcoal/85 hover:text-charcoal hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>
+              </button>
+              <div>
+                <h1 className="font-serif text-2xl text-charcoal">Assignment Generator</h1>
+                <p className="text-sm text-charcoal/75">Generate custom assignments with questions and answer keys</p>
+              </div>
+            </div>
             {error && (
-              <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+              <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-md">
                 {error}
               </div>
             )}
@@ -115,14 +252,14 @@ const AssignmentGenerator = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
-                    Assignment Title <span className="text-stone-400 font-normal">(optional)</span>
+                    Assignment Title <span className="text-stone-600 font-normal">(optional)</span>
                   </label>
                   <input type="text" name="title" value={form.title} onChange={handleChange}
                     placeholder="e.g. Chapter 3 Test – Laws of Motion" className={inputCls} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
-                    School Name <span className="text-stone-400 font-normal">(optional)</span>
+                    School Name <span className="text-stone-600 font-normal">(optional)</span>
                   </label>
                   <input type="text" name="schoolName" value={form.schoolName} onChange={handleChange}
                     placeholder="e.g. St. Mary's High School" className={inputCls} />
@@ -149,14 +286,14 @@ const AssignmentGenerator = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
-                    Chapter <span className="text-stone-400 font-normal">(optional)</span>
+                    Chapter <span className="text-stone-600 font-normal">(optional)</span>
                   </label>
                   <input type="text" name="chapter" value={form.chapter} onChange={handleChange}
                     placeholder="e.g. Chapter 3 – Laws of Motion" className={inputCls} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
-                    Topic <span className="text-stone-400 font-normal">(optional)</span>
+                    Topic <span className="text-stone-600 font-normal">(optional)</span>
                   </label>
                   <input type="text" name="topic" value={form.topic} onChange={handleChange}
                     placeholder="e.g. Newton's Second Law" className={inputCls} />
@@ -166,7 +303,7 @@ const AssignmentGenerator = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
-                    Due Date <span className="text-stone-400 font-normal">(optional)</span>
+                    Due Date <span className="text-stone-600 font-normal">(optional)</span>
                   </label>
                   <input type="date" name="dueDate" value={form.dueDate} onChange={handleChange} className={inputCls} />
                 </div>
@@ -175,8 +312,8 @@ const AssignmentGenerator = () => {
                   <div className="flex gap-2">
                     {['easy', 'medium', 'hard'].map((d) => (
                       <button key={d} type="button" onClick={() => setForm({ ...form, difficulty: d })}
-                        className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-colors capitalize ${
-                          form.difficulty === d ? 'bg-black text-white border-black' : 'bg-white text-stone-600 border-stone-200 hover:border-black'
+                        className={`flex-1 py-2 rounded-md text-xs font-medium border transition-colors capitalize ${
+                          form.difficulty === d ? 'bg-charcoal text-offwhite border-charcoal' : 'bg-white text-charcoal/80 border-sand hover:border-charcoal/30'
                         }`}>
                         {d}
                       </button>
@@ -192,9 +329,9 @@ const AssignmentGenerator = () => {
 
                   {/* Desktop header */}
                   <div className="hidden sm:grid sm:grid-cols-[1fr_auto_auto] sm:gap-3 sm:items-center sm:px-1">
-                    <span className="text-xs text-stone-400 font-medium">Question Type</span>
-                    <span className="text-xs text-stone-400 font-medium w-28 text-center">No. of Questions</span>
-                    <span className="text-xs text-stone-400 font-medium w-28 text-center">Marks Each</span>
+                    <span className="text-xs text-stone-600 font-medium">Question Type</span>
+                    <span className="text-xs text-stone-600 font-medium w-28 text-center">No. of Questions</span>
+                    <span className="text-xs text-stone-600 font-medium w-28 text-center">Marks Each</span>
                   </div>
 
                   {form.questionSections.map((section, index) => (
@@ -206,16 +343,16 @@ const AssignmentGenerator = () => {
                       {/* Mobile: counters in a row with labels */}
                       <div className="flex items-center gap-3 sm:contents">
                         <div className="flex items-center gap-2 flex-1 sm:flex-none sm:w-28 sm:justify-center">
-                          <span className="text-xs text-stone-400 sm:hidden">Qs</span>
+                          <span className="text-xs text-stone-600 sm:hidden">Qs</span>
                           <Counter value={section.count} onChange={(v) => updateSection(index, 'count', v)} />
                         </div>
                         <div className="flex items-center gap-2 flex-1 sm:flex-none sm:w-28 sm:justify-center">
-                          <span className="text-xs text-stone-400 sm:hidden">Marks</span>
+                          <span className="text-xs text-stone-600 sm:hidden">Marks</span>
                           <Counter value={section.marksPerQuestion} onChange={(v) => updateSection(index, 'marksPerQuestion', v)} />
                         </div>
                         <button type="button" onClick={() => removeSection(index)}
                           disabled={form.questionSections.length === 1}
-                          className="text-stone-300 hover:text-red-400 disabled:opacity-0 transition-colors text-xl leading-none w-6 text-center">
+                          className="text-stone-700 hover:text-red-400 disabled:opacity-0 transition-colors text-xl leading-none w-6 text-center">
                           ×
                         </button>
                       </div>
@@ -225,20 +362,20 @@ const AssignmentGenerator = () => {
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
                   <button type="button" onClick={addSection}
-                    className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-black transition-colors font-medium">
+                    className="flex items-center gap-1.5 text-sm text-stone-700 hover:text-black transition-colors font-medium">
                     <span className="w-5 h-5 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-xs leading-none transition-colors">+</span>
                     Add question type
                   </button>
                   <div className="flex gap-4 text-sm">
-                    <span className="text-stone-500">Questions: <span className="font-semibold text-black">{totalQuestions}</span></span>
-                    <span className="text-stone-500">Total Marks: <span className="font-semibold text-[#FF5841]">{totalMarks}</span></span>
+                    <span className="text-stone-700">Questions: <span className="font-semibold text-black">{totalQuestions}</span></span>
+                    <span className="text-stone-700">Total Marks: <span className="font-semibold text-terracotta">{totalMarks}</span></span>
                   </div>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
-                  Additional Instructions <span className="text-stone-400 font-normal">(optional)</span>
+                  Additional Instructions <span className="text-stone-600 font-normal">(optional)</span>
                 </label>
                 <textarea name="additionalInfo" value={form.additionalInfo} onChange={handleChange}
                   rows={3} placeholder="e.g. Make it suitable for a 1-hour exam, focus on application-based questions..."
@@ -246,18 +383,31 @@ const AssignmentGenerator = () => {
               </div>
 
               <button type="submit" disabled={loading}
-                className="w-full py-3 bg-[#FF5841] text-white text-sm font-medium rounded-lg hover:bg-[#e04d38] disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
+                className="w-full h-10 bg-slate text-white text-sm font-medium rounded-md hover:bg-slate-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 {loading ? 'Generating...' : 'Generate Assignment'}
               </button>
             </form>
           </div>
         ) : (
-          <AssignmentPreview
-            content={result}
-            showAnswers={showAnswers}
-            onToggleAnswers={() => setShowAnswers(!showAnswers)}
-            onRegenerate={handleRegenerate}
-          />
+          <div>
+            <div className="mb-4 flex items-center gap-3">
+              <button
+                onClick={() => { setPhase('landing'); setResult(null); setError('') }}
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-charcoal/85 hover:text-charcoal hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>
+              </button>
+              <span className="text-sm text-charcoal/75">Back to assignments</span>
+            </div>
+            <AssignmentPreview
+              content={result}
+              showAnswers={showAnswers}
+              onToggleAnswers={() => setShowAnswers(!showAnswers)}
+              onRegenerate={handleRegenerate}
+            />
+          </div>
         )}
       </div>
     </Layout>
@@ -282,7 +432,7 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
     <div className="space-y-4">
       <ExportPreviewModal preview={preview} onClose={closePreview} onDownload={downloadFromPreview} />
 
-      <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6">
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6">
         {/* Title + Regenerate */}
         <div className="flex items-start justify-between gap-4 mb-3">
           <h2 className="text-xl font-bold text-black leading-tight">{output.title}</h2>
@@ -296,7 +446,7 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
               {saving ? '...' : saved ? '✓ Saved' : 'Save'}
             </button>
             <button onClick={onRegenerate}
-              className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+              className="px-4 py-2 text-xs font-medium bg-slate text-white rounded-md hover:bg-slate-dark transition-colors">
               Regenerate
             </button>
           </div>
@@ -315,7 +465,7 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
               showAnswers
                 ? 'bg-stone-100 border-stone-200 text-stone-700'
-                : 'border-stone-200 text-stone-500 hover:bg-stone-50'
+                : 'border-stone-200 text-stone-700 hover:bg-stone-50'
             }`}>
             {showAnswers ? '✓ Answers shown' : 'Show Answers'}
           </button>
@@ -338,15 +488,15 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
       </div>
 
       <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6 space-y-6">
-        <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Questions</h3>
+        <h3 className="text-xs font-semibold text-stone-600 uppercase tracking-widest">Questions</h3>
         {output.questions?.map((q, i) => (
           <div key={q.id} className="pb-6 border-b border-stone-100 last:border-0 last:pb-0">
             <div className="flex items-start gap-3">
-              <span className="text-sm font-bold text-[#FF5841] mt-0.5 shrink-0">{i + 1}.</span>
+              <span className="text-sm font-bold text-terracotta mt-0.5 shrink-0">{i + 1}.</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-2 mb-1">
                   <p className="text-sm text-black flex-1">{q.question}</p>
-                  <span className="shrink-0 text-xs text-stone-400 mt-0.5">[{q.marks}m]</span>
+                  <span className="shrink-0 text-xs text-stone-600 mt-0.5">[{q.marks}m]</span>
                 </div>
                 {q.options && (
                   <ul className="mt-2 space-y-1">
@@ -361,9 +511,9 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
                 {showAnswers && (
                   <div className="mt-3 p-3 bg-orange-50 border border-orange-100 rounded-lg">
                     <p className="text-sm font-medium text-black">
-                      Answer: <span className="text-[#FF5841]">{q.answer}</span>
+                      Answer: <span className="text-terracotta">{q.answer}</span>
                     </p>
-                    {q.explanation && <p className="text-xs text-stone-500 mt-1">{q.explanation}</p>}
+                    {q.explanation && <p className="text-xs text-stone-700 mt-1">{q.explanation}</p>}
                   </div>
                 )}
               </div>

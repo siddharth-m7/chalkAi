@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import api from '../api/axios'
 import { useExport } from '../hooks/useExport'
@@ -38,7 +39,7 @@ const TagEditor = ({ tags, onSave, onCancel }) => {
         {current.map((tag) => (
           <span key={tag} className="flex items-center gap-1 px-2.5 py-1 bg-stone-100 text-stone-600 text-xs rounded-full">
             {tag}
-            <button onClick={() => remove(tag)} className="text-stone-400 hover:text-red-400 transition-colors leading-none">×</button>
+            <button onClick={() => remove(tag)} className="text-stone-600 hover:text-red-400 transition-colors leading-none">×</button>
           </span>
         ))}
       </div>
@@ -48,7 +49,7 @@ const TagEditor = ({ tags, onSave, onCancel }) => {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
           placeholder="Add tag..."
-          className="flex-1 px-3 py-1.5 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5841]/40 focus:border-[#FF5841]"
+          className="flex-1 px-3 py-1.5 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:border-terracotta"
         />
         <button onClick={add}
           className="px-3 py-1.5 text-xs bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors">
@@ -57,11 +58,11 @@ const TagEditor = ({ tags, onSave, onCancel }) => {
       </div>
       <div className="flex gap-2">
         <button onClick={() => onSave(current)}
-          className="px-3 py-1.5 text-xs bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+          className="px-3 py-1.5 text-xs bg-slate text-white rounded-lg hover:bg-slate-dark transition-colors">
           Save
         </button>
         <button onClick={onCancel}
-          className="px-3 py-1.5 text-xs border border-stone-200 text-stone-500 rounded-lg hover:bg-stone-50 transition-colors">
+          className="px-3 py-1.5 text-xs border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors">
           Cancel
         </button>
       </div>
@@ -84,7 +85,7 @@ const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
 
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(contentId, title)
 
-  const typeInfo = TYPE_LABELS[item.itemType] || { label: item.itemType, color: 'bg-stone-100 text-stone-500' }
+  const typeInfo = TYPE_LABELS[item.itemType] || { label: item.itemType, color: 'bg-stone-100 text-stone-700' }
 
   const handleDelete = async () => {
     if (deleting) return
@@ -114,7 +115,7 @@ const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
   })
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5 flex flex-col gap-3">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-3">
       <ExportPreviewModal preview={preview} onClose={closePreview} onDownload={downloadFromPreview} />
 
       {/* Header */}
@@ -124,14 +125,14 @@ const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
             <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full uppercase tracking-wide ${typeInfo.color}`}>
               {typeInfo.label}
             </span>
-            <span className="text-xs text-stone-400">{date}</span>
+            <span className="text-xs text-stone-600">{date}</span>
           </div>
           <h3 className="text-sm font-semibold text-black leading-snug">{title}</h3>
         </div>
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
+          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-stone-700 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
           title="Remove from library"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -145,13 +146,13 @@ const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
         <div className="flex flex-wrap gap-1.5 items-center min-h-[24px]">
           {tags.length > 0
             ? tags.map((tag) => (
-                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-500 text-xs rounded-full">{tag}</span>
+                <span key={tag} className="px-2.5 py-1 bg-stone-100 text-stone-700 text-xs rounded-full">{tag}</span>
               ))
-            : <span className="text-xs text-stone-300">No tags</span>
+            : <span className="text-xs text-stone-700">No tags</span>
           }
           <button
             onClick={() => setEditingTags(true)}
-            className="px-2 py-0.5 text-[10px] text-stone-400 hover:text-[#FF5841] border border-dashed border-stone-200 hover:border-[#FF5841]/40 rounded-full transition-colors"
+            className="px-2 py-0.5 text-[10px] text-stone-600 hover:text-terracotta border border-dashed border-stone-200 hover:border-terracotta/40 rounded-full transition-colors"
           >
             {tags.length > 0 ? 'edit' : '+ tag'}
           </button>
@@ -199,6 +200,7 @@ const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 const PersonalLibrary = () => {
+  const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
@@ -226,10 +228,22 @@ const PersonalLibrary = () => {
 
   return (
     <Layout>
-      <div className="max-w-5xl">
+      <div className="max-w-5xl mx-auto">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-black">Personal Library</h1>
-          <p className="text-stone-500 mt-1 text-sm">Your saved assignments, lesson plans, and concept explanations</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-xs text-charcoal/75 hover:text-charcoal transition-colors mb-3 font-medium"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            Back
+          </button>
+          <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-charcoal/85 mb-1.5">
+            Tools
+          </p>
+          <h1 className="font-serif text-3xl text-charcoal">Personal Library</h1>
+          <p className="text-sm text-charcoal/75 mt-1">Your saved assignments, lesson plans, and concept explanations</p>
         </div>
 
         {/* Filter tabs */}
@@ -243,12 +257,12 @@ const PersonalLibrary = () => {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
                   activeTab === tab.key
                     ? 'bg-black text-white'
-                    : 'text-stone-500 hover:bg-stone-100 hover:text-black'
+                    : 'text-stone-700 hover:bg-stone-100 hover:text-black'
                 }`}
               >
                 {tab.label}
                 <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                  activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-400'
+                  activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600'
                 }`}>
                   {count}
                 </span>
@@ -261,7 +275,7 @@ const PersonalLibrary = () => {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white border border-stone-200 rounded-2xl p-5 animate-pulse space-y-3">
+              <div key={i} className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 animate-pulse space-y-3">
                 <div className="h-3 bg-stone-100 rounded w-1/3" />
                 <div className="h-4 bg-stone-100 rounded w-2/3" />
                 <div className="h-3 bg-stone-100 rounded w-1/2" />
@@ -274,7 +288,7 @@ const PersonalLibrary = () => {
             <p className="text-sm font-medium text-stone-600">
               {activeTab === 'all' ? 'Your library is empty' : `No ${FILTER_TABS.find(t => t.key === activeTab)?.label} saved yet`}
             </p>
-            <p className="text-xs text-stone-400 mt-1">
+            <p className="text-xs text-stone-600 mt-1">
               Save generated content by clicking "Save to Library" on any result page.
             </p>
           </div>

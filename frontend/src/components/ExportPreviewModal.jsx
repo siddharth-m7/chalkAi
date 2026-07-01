@@ -2,36 +2,29 @@ const ExportPreviewModal = ({ preview, onClose, onDownload }) => {
   if (!preview) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col" style={{ height: '90vh' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white border border-sand rounded-lg shadow-md w-full max-w-4xl flex flex-col" style={{ height: '90vh' }}>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 shrink-0">
+        <div className="flex items-center justify-between px-5 h-14 border-b border-sand shrink-0">
           <div>
-            <h3 className="text-sm font-semibold text-black">PDF Preview</h3>
-            <p className="text-xs text-stone-400 mt-0.5">{preview.filename}</p>
+            <h3 className="text-sm font-semibold text-charcoal">PDF Preview</h3>
+            <p className="font-mono text-[11px] text-charcoal/85 mt-0.5">{preview.filename}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={onDownload}
-              className="px-4 py-2 bg-[#FF5841] text-white text-xs font-medium rounded-lg hover:bg-[#e04d38] transition-colors"
-            >
+            <button onClick={onDownload}
+              className="h-8 px-4 bg-slate text-white text-xs font-medium rounded-md hover:bg-slate-dark transition-colors">
               Download PDF
             </button>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-black hover:bg-stone-100 rounded-lg transition-colors text-xl leading-none"
-            >
+            <button onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center text-charcoal/85 hover:text-charcoal hover:bg-sand/60 rounded-md transition-colors text-lg leading-none">
               ×
             </button>
           </div>
         </div>
 
         {/* PDF iframe */}
-        <iframe
-          src={preview.url}
-          className="flex-1 w-full rounded-b-2xl"
-          title="PDF Preview"
-        />
+        <iframe src={preview.url} className="flex-1 w-full rounded-b-xl" title="PDF Preview" />
       </div>
     </div>
   )

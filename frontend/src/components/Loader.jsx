@@ -31,15 +31,15 @@ const Loader = ({ authLoading }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-charcoal transition-opacity duration-500"
       style={{ opacity: !authLoading && progress === 100 ? 0 : 1 }}
     >
-      <h1 className="text-6xl font-extrabold text-black tracking-tight mb-8 select-none">
-        Chalk<span className="text-[#FF5841]">AI</span>
+      <h1 className="font-serif text-6xl text-offwhite mb-8 select-none">
+        Chalk<span className="text-terracotta">AI</span>
       </h1>
-      <div className="w-72 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+      <div className="w-72 h-1 bg-white/10 rounded-full overflow-hidden">
         <div
-          className="h-full bg-[#FF5841] rounded-full transition-all duration-300 ease-out"
+          className="h-full bg-slate rounded-full transition-all duration-300 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>

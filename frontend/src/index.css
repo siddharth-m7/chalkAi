@@ -1,1 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
+
+@theme {
+  /* Brand palette */
+  --color-charcoal:        #2c3e50;
+  --color-terracotta:      #6366f1;
+  --color-terracotta-dark: #4f46e5;
+  --color-offwhite:        #ffffff;
+  --color-slate:           #5a8fa3;
+  --color-slate-dark:      #4a7b92;
+  --color-sand:            #f0e6dc;
+  --color-orange:          #f97316;
+  --color-orange-dark:     #ea580c;
+
+  /* Typography */
+  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Crimson Text', Georgia, 'Times New Roman', serif;
+  --font-mono:  'JetBrains Mono', 'Courier New', monospace;
+
+  /* Card shadow */
+  --shadow-card: 0 1px 3px rgba(44, 62, 80, 0.08), 0 1px 2px rgba(44, 62, 80, 0.04);
+  --shadow-md:   0 4px 12px rgba(44, 62, 80, 0.12), 0 2px 4px rgba(44, 62, 80, 0.06);
+}
+
+@layer base {
+  *, *::before, *::after {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #2c3e50;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  ::selection {
+    background-color: #6366f1;
+    color: #fff;
+  }
+
+  /* Global focus ring */
+  :focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+  }
+
+  /* Remove browser default outline when using :focus-visible */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Smooth page fade-in */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-enter {
+    animation: fadeIn 200ms ease-out forwards;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

@@ -2,6 +2,31 @@ import { Request, Response, NextFunction } from 'express'
 import Resource from '../models/Resource'
 import { fetchYouTubeResources } from '../services/resourceService'
 
+const DEFAULT_QUERY      = 'Photosynthesis'
+const DEFAULT_SUBJECT    = 'Biology'
+const DEFAULT_GRADELEVEL = 'Grade 8'
+
+// GET /api/v1/resources/default
+// Returns pre-seeded photosynthesis results from DB, fetching from YouTube on first call
+export const getDefaultResources = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const cached = await Resource.find({
+      $text: { $search: DEFAULT_QUERY },
+      subject: DEFAULT_SUBJECT,
+    }).sort({ indexedAt: -1 }).limit(12)
+
+    if (cached.length >= 3) {
+      res.json({ success: true, data: cached, source: 'cache' })
+      return
+    }
+
+    const resources = await fetchYouTubeResources(DEFAULT_QUERY, DEFAULT_SUBJECT, DEFAULT_GRADELEVEL)
+    res.json({ success: true, data: resources, source: 'youtube' })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // GET /api/v1/resources?q=&subject=&gradeLevel=&page=&limit=
 export const searchResources = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
