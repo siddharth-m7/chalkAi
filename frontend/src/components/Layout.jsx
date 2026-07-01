@@ -8,6 +8,7 @@ const tabItems = [
   { to: '/generate/assignment', label: 'Assignment', icon: '📝' },
   { to: '/generate/lesson-plan', label: 'Lesson Plan', icon: '📅' },
   { to: '/generate/concept', label: 'Concept', icon: '💡' },
+  { to: '/resources', label: 'Resources', icon: '🔍' },
 ]
 
 // Full sidebar nav (desktop) — includes Profile

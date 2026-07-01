@@ -9,6 +9,7 @@ import Profile from './pages/Profile'
 import AssignmentGenerator from './pages/AssignmentGenerator'
 import LessonPlanGenerator from './pages/LessonPlanGenerator'
 import ConceptExplainer from './pages/ConceptExplainer'
+import ResourceDiscovery from './pages/ResourceDiscovery'
 import Home from './pages/Home'
 
 const AppRoutes = () => {
@@ -58,6 +59,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ConceptExplainer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resources"
+          element={
+            <ProtectedRoute>
+              <ResourceDiscovery />
             </ProtectedRoute>
           }
         />

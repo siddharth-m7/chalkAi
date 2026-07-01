@@ -10,12 +10,6 @@ const features = [
     to: '/generate/assignment',
   },
   {
-    label: 'Quiz Builder',
-    description: 'Build quizzes with configurable difficulty',
-    icon: '❓',
-    to: null,
-  },
-  {
     label: 'Lesson Plan',
     description: 'Generate structured weekly lesson plans',
     icon: '📅',
@@ -31,7 +25,7 @@ const features = [
     label: 'Resource Discovery',
     description: 'Find curated educational resources',
     icon: '🔍',
-    to: null,
+    to: '/resources',
   },
   {
     label: 'Personal Library',
