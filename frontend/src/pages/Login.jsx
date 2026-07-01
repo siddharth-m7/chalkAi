@@ -43,9 +43,7 @@ const Login = () => {
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-black tracking-tight">
-            Chalk<span className="text-[#FF5841]">AI</span>
-          </h1>
+          <img src="/chalkAiLogo.png" alt="ChalkAI" className="h-10 w-auto mx-auto" />
           <p className="text-stone-500 mt-1 text-sm">AI-powered tools for educators</p>
         </div>
 

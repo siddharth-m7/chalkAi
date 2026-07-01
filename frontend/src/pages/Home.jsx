@@ -34,9 +34,7 @@ const Home = () => {
       {/* Navbar */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-stone-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-lg font-bold text-black tracking-tight">
-            Chalk<span className="text-[#FF5841]">AI</span>
-          </span>
+          <img src="/chalkAiLogo.png" alt="ChalkAI" className="h-8 w-auto" />
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-sm text-stone-500 hover:text-black font-medium transition-colors">
               Sign in
@@ -172,7 +170,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="border-t border-stone-100 py-7 bg-white">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-400">
-          <span className="font-bold text-black">Chalk<span className="text-[#FF5841]">AI</span></span>
+          <img src="/chalkAiLogo.png" alt="ChalkAI" className="h-6 w-auto" />
           <span>Built for educators, by developers who care about education.</span>
         </div>
       </footer>

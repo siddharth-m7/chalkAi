@@ -7,6 +7,7 @@ const tabItems = [
   { to: '/dashboard', label: 'Dashboard', icon: '⊞' },
   { to: '/generate/assignment', label: 'Assignment', icon: '📝' },
   { to: '/generate/lesson-plan', label: 'Lesson Plan', icon: '📅' },
+  { to: '/generate/concept', label: 'Concept', icon: '💡' },
 ]
 
 // Full sidebar nav (desktop) — includes Profile
@@ -31,8 +32,11 @@ const Layout = ({ children }) => {
       {/* ── Desktop sidebar ─────────────────────────────── */}
       <aside className="hidden md:flex w-60 bg-white border-r border-stone-200 flex-col shrink-0 print:hidden">
         <div className="px-5 py-5 border-b border-stone-100">
-          <NavLink to="/" className="text-lg font-bold text-black tracking-tight hover:opacity-70 transition-opacity">
-            Chalk<span className="text-[#FF5841]">AI</span>
+          <NavLink to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src="/chalkAiLogo.png" alt="ChalkAI" className="h-8 w-auto" />
+            <span className="text-lg font-bold text-black tracking-tight">
+              Chalk<span className="text-[#FF5841]">AI</span>
+            </span>
           </NavLink>
         </div>
 
@@ -76,8 +80,8 @@ const Layout = ({ children }) => {
 
         {/* Mobile top bar */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-stone-100 print:hidden sticky top-0 z-30">
-          <NavLink to="/" className="text-sm font-bold text-black tracking-tight">
-            Chalk<span className="text-[#FF5841]">AI</span>
+          <NavLink to="/" className="hover:opacity-80 transition-opacity">
+            <img src="/chalkAiLogo.png" alt="ChalkAI" className="h-7 w-auto" />
           </NavLink>
 
           {/* Profile avatar — top right on mobile */}

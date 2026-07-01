@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import AssignmentGenerator from './pages/AssignmentGenerator'
 import LessonPlanGenerator from './pages/LessonPlanGenerator'
+import ConceptExplainer from './pages/ConceptExplainer'
 import Home from './pages/Home'
 
 const AppRoutes = () => {
@@ -49,6 +50,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <LessonPlanGenerator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/generate/concept"
+          element={
+            <ProtectedRoute>
+              <ConceptExplainer />
             </ProtectedRoute>
           }
         />

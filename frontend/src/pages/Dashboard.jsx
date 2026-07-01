@@ -25,7 +25,7 @@ const features = [
     label: 'Concept Explainer',
     description: 'Explain any concept in multiple ways',
     icon: '💡',
-    to: null,
+    to: '/generate/concept',
   },
   {
     label: 'Resource Discovery',
