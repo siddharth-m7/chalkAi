@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../api/axios'
 import { useExport } from '../hooks/useExport'
+import { useLibrary } from '../hooks/useLibrary'
 import ExportPreviewModal from '../components/ExportPreviewModal'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
@@ -266,6 +267,7 @@ const AssignmentGenerator = () => {
 const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate }) => {
   const { output } = content
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.title)
+  const { saved, saving, toggle } = useLibrary(content._id)
 
   const tags = [
     output.subject,
@@ -284,10 +286,20 @@ const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate
         {/* Title + Regenerate */}
         <div className="flex items-start justify-between gap-4 mb-3">
           <h2 className="text-xl font-bold text-black leading-tight">{output.title}</h2>
-          <button onClick={onRegenerate}
-            className="shrink-0 px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
-            Regenerate
-          </button>
+          <div className="flex gap-2 shrink-0">
+            <button onClick={toggle} disabled={saving}
+              className={`px-4 py-2 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${
+                saved
+                  ? 'bg-stone-100 border-stone-200 text-stone-600'
+                  : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+              }`}>
+              {saving ? '...' : saved ? '✓ Saved' : 'Save'}
+            </button>
+            <button onClick={onRegenerate}
+              className="px-4 py-2 text-xs font-medium bg-[#FF5841] text-white rounded-lg hover:bg-[#e04d38] transition-colors">
+              Regenerate
+            </button>
+          </div>
         </div>
 
         {/* Tags row */}

@@ -31,7 +31,7 @@ const features = [
     label: 'Personal Library',
     description: 'Save and organize your generated content',
     icon: '📚',
-    to: null,
+    to: '/library',
   },
 ]
 

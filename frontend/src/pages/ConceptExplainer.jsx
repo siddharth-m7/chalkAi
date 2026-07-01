@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../api/axios'
 import { useExport } from '../hooks/useExport'
+import { useLibrary } from '../hooks/useLibrary'
 import ExportPreviewModal from '../components/ExportPreviewModal'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
@@ -140,6 +141,7 @@ const ConceptResult = ({ content, onReset }) => {
   const { output } = content
   const [activeTab, setActiveTab] = useState(0)
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.concept)
+  const { saved, saving, toggle } = useLibrary(content._id)
 
   const explanations = output.explanations || []
   const successful = explanations.filter((e) => e.success)
@@ -165,7 +167,15 @@ const ConceptResult = ({ content, onReset }) => {
               </span>
             </div>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+            <button onClick={toggle} disabled={saving}
+              className={`px-4 py-2 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${
+                saved
+                  ? 'bg-stone-100 border-stone-200 text-stone-600'
+                  : 'border-stone-200 text-stone-600 hover:bg-stone-50'
+              }`}>
+              {saving ? '...' : saved ? '✓ Saved' : 'Save'}
+            </button>
             <button onClick={() => exportAs('pdf')} disabled={!!exporting}
               className="px-4 py-2 text-xs font-medium border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition-colors disabled:opacity-50">
               {exporting === 'pdf' ? 'Exporting...' : 'Export as PDF'}

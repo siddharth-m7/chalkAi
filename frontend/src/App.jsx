@@ -10,6 +10,7 @@ import AssignmentGenerator from './pages/AssignmentGenerator'
 import LessonPlanGenerator from './pages/LessonPlanGenerator'
 import ConceptExplainer from './pages/ConceptExplainer'
 import ResourceDiscovery from './pages/ResourceDiscovery'
+import PersonalLibrary from './pages/PersonalLibrary'
 import Home from './pages/Home'
 
 const AppRoutes = () => {
@@ -67,6 +68,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ResourceDiscovery />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/library"
+          element={
+            <ProtectedRoute>
+              <PersonalLibrary />
             </ProtectedRoute>
           }
         />

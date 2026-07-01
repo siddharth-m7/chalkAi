@@ -47,6 +47,24 @@ export const listLibrary = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
+export const updateLibraryItem = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { tags, notes } = req.body as { tags?: string[]; notes?: string }
+    const item = await PersonalLibrary.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { ...(tags !== undefined && { tags }), ...(notes !== undefined && { notes }) },
+      { returnDocument: 'after' }
+    )
+    if (!item) {
+      res.status(404).json({ success: false, message: 'Item not found' })
+      return
+    }
+    res.json({ success: true, data: item })
+  } catch (err) {
+    next(err)
+  }
+}
+
 export const removeFromLibrary = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const item = await PersonalLibrary.findOneAndDelete({ _id: req.params.id, userId: req.user._id })
