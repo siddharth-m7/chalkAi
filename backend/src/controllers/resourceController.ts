@@ -38,7 +38,9 @@ export const searchResources = async (req: Request, res: Response, next: NextFun
     if (gradeLevel) filter.gradeLevel  = gradeLevel
 
     const skip  = (Number(page) - 1) * Number(limit)
-    const sort  = q ? { score: { $meta: 'textScore' } } : { indexedAt: -1 }
+    const sort: Record<string, 1 | -1 | { $meta: string }> = q
+      ? { score: { $meta: 'textScore' } }
+      : { indexedAt: -1 }
 
     const [resources, total] = await Promise.all([
       Resource.find(filter).sort(sort).skip(skip).limit(Number(limit)),

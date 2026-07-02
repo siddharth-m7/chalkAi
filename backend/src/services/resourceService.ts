@@ -17,7 +17,7 @@ export const fetchYouTubeResources = async (
   query: string,
   subject: string,
   gradeLevel: string
-): Promise<typeof Resource[]> => {
+): Promise<InstanceType<typeof Resource>[]> => {
   const apiKey = process.env.YOUTUBE_API_KEY
   if (!apiKey) {
     logger.warn('YOUTUBE_API_KEY not set — skipping YouTube fetch')
@@ -60,5 +60,5 @@ export const fetchYouTubeResources = async (
     )
   )
 
-  return saved.filter(Boolean) as typeof Resource[]
+  return saved.filter((doc): doc is InstanceType<typeof Resource> => doc !== null)
 }
