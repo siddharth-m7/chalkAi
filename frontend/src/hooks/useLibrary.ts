@@ -1,13 +1,14 @@
 import { useState } from 'react'
+import axios from 'axios'
 import api from '../api/axios'
 
 // Pass contentId once the generated result is available.
 // saved: whether this item is currently in the library.
 // libraryItemId: the PersonalLibrary _id (needed for delete/update from the library page).
-export const useLibrary = (contentId) => {
+export const useLibrary = (contentId: string | undefined) => {
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [libraryItemId, setLibraryItemId] = useState(null)
+  const [libraryItemId, setLibraryItemId] = useState<string | null>(null)
 
   const save = async () => {
     if (!contentId || saving || saved) return
@@ -18,7 +19,7 @@ export const useLibrary = (contentId) => {
       setLibraryItemId(res.data.data._id)
     } catch (err) {
       // 409 means already saved — treat as saved
-      if (err.response?.status === 409) setSaved(true)
+      if (axios.isAxiosError(err) && err.response?.status === 409) setSaved(true)
       else console.error('Save to library failed', err)
     } finally {
       setSaving(false)

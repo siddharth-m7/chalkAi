@@ -1,4 +1,15 @@
-const ExportPreviewModal = ({ preview, onClose, onDownload }) => {
+interface ExportPreview {
+  url: string
+  filename: string
+}
+
+interface ExportPreviewModalProps {
+  preview: ExportPreview | null
+  onClose: () => void
+  onDownload: () => void
+}
+
+const ExportPreviewModal = ({ preview, onClose, onDownload }: ExportPreviewModalProps) => {
   if (!preview) return null
 
   return (

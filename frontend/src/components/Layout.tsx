@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 // ── SVG icon primitives ─────────────────────────────────────────────────────
-const Icon = ({ children, className = 'w-4 h-4' }) => (
+const Icon = ({ children, className = 'w-4 h-4' }: { children: ReactNode; className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
     {children}
@@ -62,7 +62,13 @@ const icons = {
 }
 
 // ── Nav data ────────────────────────────────────────────────────────────────
-const mainNav = [
+interface NavItem {
+  to: string
+  label: string
+  icon: ReactNode
+}
+
+const mainNav: NavItem[] = [
   { to: '/dashboard',            label: 'Overview',     icon: icons.dashboard  },
   { to: '/generate/assignment',  label: 'Assignments',  icon: icons.assignment },
   { to: '/generate/lesson-plan', label: 'Lesson Plans', icon: icons.calendar   },
@@ -74,7 +80,7 @@ const mainNav = [
 const tabItems = mainNav  // alias for mobile tab bar
 
 // ── Sidebar NavItem ─────────────────────────────────────────────────────────
-const SideNavItem = ({ to, label, icon }) => (
+const SideNavItem = ({ to, label, icon }: NavItem) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
@@ -91,7 +97,7 @@ const SideNavItem = ({ to, label, icon }) => (
 )
 
 // ── Layout ──────────────────────────────────────────────────────────────────
-const Layout = ({ children }) => {
+const Layout = ({ children }: { children: ReactNode }) => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)

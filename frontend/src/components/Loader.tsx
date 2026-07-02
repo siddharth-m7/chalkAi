@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 
-const Loader = ({ authLoading }) => {
+const Loader = ({ authLoading }: { authLoading: boolean }) => {
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    const steps = [
+    const steps: [number, number][] = [
       [100, 15],
       [200, 30],
       [300, 45],

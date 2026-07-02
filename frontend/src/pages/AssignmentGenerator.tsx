@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import api from '../api/axios'
+import api, { getErrorMessage } from '../api/axios'
 import { useExport } from '../hooks/useExport'
 import { useLibrary } from '../hooks/useLibrary'
 import ExportPreviewModal from '../components/ExportPreviewModal'
+import type { AssignmentOutput, GeneratedContent, LibraryItem } from '../types'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
@@ -16,7 +17,26 @@ const QUESTION_TYPES = [
   { value: 'numerical', label: 'Numerical Problems' },
 ]
 
-const defaultForm = {
+interface QuestionSection {
+  type: string
+  count: number
+  marksPerQuestion: number
+}
+
+interface AssignmentForm {
+  title: string
+  schoolName: string
+  subject: string
+  gradeLevel: string
+  chapter: string
+  topic: string
+  dueDate: string
+  difficulty: string
+  questionSections: QuestionSection[]
+  additionalInfo: string
+}
+
+const defaultForm: AssignmentForm = {
   title: '',
   schoolName: '',
   subject: '',
@@ -36,7 +56,14 @@ const defaultForm = {
 
 const inputCls = 'w-full h-9 px-3 bg-white border border-sand rounded-md text-sm text-charcoal placeholder-charcoal/35 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition-colors'
 
-const Counter = ({ value, onChange, min = 1, max = 20 }) => (
+interface CounterProps {
+  value: number
+  onChange: (value: number) => void
+  min?: number
+  max?: number
+}
+
+const Counter = ({ value, onChange, min = 1, max = 20 }: CounterProps) => (
   <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden">
     <button type="button" onClick={() => onChange(Math.max(min, value - 1))}
       className="w-8 h-8 flex items-center justify-center text-stone-600 hover:bg-stone-50 transition-colors text-base leading-none">−</button>
@@ -47,9 +74,10 @@ const Counter = ({ value, onChange, min = 1, max = 20 }) => (
 )
 
 // ── Recent assignment card (landing page) ───────────────────────────────────
-const RecentAssignmentCard = ({ item }) => {
-  const contentId = item.contentId?._id || item.contentId
-  const output = item.contentId?.output || {}
+const RecentAssignmentCard = ({ item }: { item: LibraryItem }) => {
+  const populated = typeof item.contentId === 'object' ? item.contentId : null
+  const contentId = populated?._id ?? (typeof item.contentId === 'string' ? item.contentId : undefined)
+  const output = (populated?.output ?? {}) as AssignmentOutput
   const title = output.title || 'Untitled'
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(contentId, title)
 
@@ -90,23 +118,25 @@ const RecentAssignmentCard = ({ item }) => {
   )
 }
 
+type Phase = 'landing' | 'form' | 'result'
+type AssignmentContent = GeneratedContent<AssignmentOutput>
+
 // ── Main page ────────────────────────────────────────────────────────────────
 const AssignmentGenerator = () => {
   const navigate = useNavigate()
-  // 'landing' | 'form' | 'result'
-  const [phase, setPhase] = useState('landing')
-  const [form, setForm] = useState(defaultForm)
-  const [result, setResult] = useState(null)
+  const [phase, setPhase] = useState<Phase>('landing')
+  const [form, setForm] = useState<AssignmentForm>(defaultForm)
+  const [result, setResult] = useState<AssignmentContent | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showAnswers, setShowAnswers] = useState(false)
-  const [recent, setRecent] = useState([])
+  const [recent, setRecent] = useState<LibraryItem[]>([])
   const [loadingRecent, setLoadingRecent] = useState(true)
 
   useEffect(() => {
     api.get('/library')
       .then(res => {
-        const items = (res.data.data || [])
+        const items = ((res.data.data || []) as LibraryItem[])
           .filter(i => i.itemType === 'assignment')
           .slice(0, 4)
         setRecent(items)
@@ -115,7 +145,7 @@ const AssignmentGenerator = () => {
       .finally(() => setLoadingRecent(false))
   }, [])
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
   }
@@ -124,19 +154,19 @@ const AssignmentGenerator = () => {
     setForm({ ...form, questionSections: [...form.questionSections, { type: 'short_answer', count: 3, marksPerQuestion: 2 }] })
   }
 
-  const removeSection = (index) => {
+  const removeSection = (index: number) => {
     setForm({ ...form, questionSections: form.questionSections.filter((_, i) => i !== index) })
   }
 
-  const updateSection = (index, field, value) => {
-    const updated = form.questionSections.map((s, i) => i === index ? { ...s, [field]: value } : s)
+  const updateSection = (index: number, field: keyof QuestionSection, value: string | number) => {
+    const updated = form.questionSections.map((s, i) => i === index ? { ...s, [field]: value } : s) as QuestionSection[]
     setForm({ ...form, questionSections: updated })
   }
 
   const totalQuestions = form.questionSections.reduce((sum, s) => sum + s.count, 0)
   const totalMarks = form.questionSections.reduce((sum, s) => sum + s.count * s.marksPerQuestion, 0)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setResult(null)
@@ -147,7 +177,7 @@ const AssignmentGenerator = () => {
       setShowAnswers(false)
       setPhase('result')
     } catch (err) {
-      setError(err.response?.data?.message || 'Generation failed. Please try again.')
+      setError(getErrorMessage(err, 'Generation failed. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -401,12 +431,14 @@ const AssignmentGenerator = () => {
               </button>
               <span className="text-sm text-charcoal/75">Back to assignments</span>
             </div>
-            <AssignmentPreview
-              content={result}
-              showAnswers={showAnswers}
-              onToggleAnswers={() => setShowAnswers(!showAnswers)}
-              onRegenerate={handleRegenerate}
-            />
+            {result && (
+              <AssignmentPreview
+                content={result}
+                showAnswers={showAnswers}
+                onToggleAnswers={() => setShowAnswers(!showAnswers)}
+                onRegenerate={handleRegenerate}
+              />
+            )}
           </div>
         )}
       </div>
@@ -414,7 +446,14 @@ const AssignmentGenerator = () => {
   )
 }
 
-const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate }) => {
+interface AssignmentPreviewProps {
+  content: AssignmentContent
+  showAnswers: boolean
+  onToggleAnswers: () => void
+  onRegenerate: () => void
+}
+
+const AssignmentPreview = ({ content, showAnswers, onToggleAnswers, onRegenerate }: AssignmentPreviewProps) => {
   const { output } = content
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.title)
   const { saved, saving, toggle } = useLibrary(content._id)

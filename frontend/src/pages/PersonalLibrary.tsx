@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import api from '../api/axios'
 import { useExport } from '../hooks/useExport'
 import ExportPreviewModal from '../components/ExportPreviewModal'
+import type { LibraryItem } from '../types'
 
-const TYPE_LABELS = {
+const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   assignment:    { label: 'Assignment',   color: 'bg-blue-50 text-blue-600'    },
   lessonPlan:    { label: 'Lesson Plan',  color: 'bg-green-50 text-green-600'  },
   conceptExplain:{ label: 'Concept',      color: 'bg-purple-50 text-purple-600' },
@@ -21,9 +22,15 @@ const FILTER_TABS = [
 
 // ── Tag editor ───────────────────────────────────────────────────────────────
 
-const TagEditor = ({ tags, onSave, onCancel }) => {
+interface TagEditorProps {
+  tags: string[]
+  onSave: (tags: string[]) => void
+  onCancel: () => void
+}
+
+const TagEditor = ({ tags, onSave, onCancel }: TagEditorProps) => {
   const [input, setInput] = useState('')
-  const [current, setCurrent] = useState(tags)
+  const [current, setCurrent] = useState<string[]>(tags)
 
   const add = () => {
     const trimmed = input.trim()
@@ -31,7 +38,7 @@ const TagEditor = ({ tags, onSave, onCancel }) => {
     setInput('')
   }
 
-  const remove = (tag) => setCurrent(current.filter((t) => t !== tag))
+  const remove = (tag: string) => setCurrent(current.filter((t) => t !== tag))
 
   return (
     <div className="mt-3 space-y-2">
@@ -47,7 +54,7 @@ const TagEditor = ({ tags, onSave, onCancel }) => {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
+          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
           placeholder="Add tag..."
           className="flex-1 px-3 py-1.5 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:border-terracotta"
         />
@@ -72,14 +79,22 @@ const TagEditor = ({ tags, onSave, onCancel }) => {
 
 // ── Library card ─────────────────────────────────────────────────────────────
 
-const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
+interface LibraryCardProps {
+  item: LibraryItem
+  onDelete: (id: string) => void
+  onTagsUpdate: (id: string, tags: string[]) => void
+}
+
+const LibraryCard = ({ item, onDelete, onTagsUpdate }: LibraryCardProps) => {
   const [editingTags, setEditingTags] = useState(false)
-  const [tags, setTags] = useState(item.tags || [])
+  const [tags, setTags] = useState<string[]>(item.tags || [])
   const [deleting, setDeleting] = useState(false)
 
-  const contentId = item.contentId?._id || item.contentId
-  const title = item.contentId?.output?.title
-    || item.contentId?.output?.concept
+  const populated = typeof item.contentId === 'object' ? item.contentId : null
+  const contentId = populated?._id ?? (typeof item.contentId === 'string' ? item.contentId : undefined)
+  const output = (populated?.output ?? {}) as { title?: string; concept?: string }
+  const title = output.title
+    || output.concept
     || item.title
     || 'Untitled'
 
@@ -99,7 +114,7 @@ const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
     }
   }
 
-  const handleSaveTags = async (newTags) => {
+  const handleSaveTags = async (newTags: string[]) => {
     try {
       await api.patch(`/library/${item._id}`, { tags: newTags })
       setTags(newTags)
@@ -201,7 +216,7 @@ const LibraryCard = ({ item, onDelete, onTagsUpdate }) => {
 
 const PersonalLibrary = () => {
   const navigate = useNavigate()
-  const [items, setItems] = useState([])
+  const [items, setItems] = useState<LibraryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
 
@@ -219,9 +234,9 @@ const PersonalLibrary = () => {
     fetch()
   }, [])
 
-  const handleDelete = (id) => setItems((prev) => prev.filter((i) => i._id !== id))
+  const handleDelete = (id: string) => setItems((prev) => prev.filter((i) => i._id !== id))
 
-  const handleTagsUpdate = (id, newTags) =>
+  const handleTagsUpdate = (id: string, newTags: string[]) =>
     setItems((prev) => prev.map((i) => i._id === id ? { ...i, tags: newTags } : i))
 
   const filtered = activeTab === 'all' ? items : items.filter((i) => i.itemType === activeTab)

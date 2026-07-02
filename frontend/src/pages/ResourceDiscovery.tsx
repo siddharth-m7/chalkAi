@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import api from '../api/axios'
+import api, { getErrorMessage } from '../api/axios'
+import type { Resource } from '../types'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
 
 const inputCls = 'w-full h-9 px-3 bg-white border border-sand rounded-md text-sm text-charcoal placeholder-charcoal/35 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition-colors'
 
-const ResourceCard = ({ resource }) => (
+const ResourceCard = ({ resource }: { resource: Resource }) => (
   <a
     href={resource.url}
     target="_blank"
@@ -53,7 +54,7 @@ const ResourceCard = ({ resource }) => (
   </a>
 )
 
-const EmptyState = ({ searched }) => (
+const EmptyState = ({ searched }: { searched: boolean }) => (
   <div className="text-center py-16">
     <div className="w-16 h-16 bg-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
       {searched ? '🔍' : '📺'}
@@ -72,7 +73,7 @@ const EmptyState = ({ searched }) => (
 const ResourceDiscovery = () => {
   const navigate = useNavigate()
   const [form, setForm] = useState({ query: '', subject: '', gradeLevel: '' })
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<Resource[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [searched, setSearched] = useState(false)
@@ -91,9 +92,10 @@ const ResourceDiscovery = () => {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!form.query.trim()) return
     setError('')
@@ -106,7 +108,7 @@ const ResourceDiscovery = () => {
       setSource(res.data.source || '')
       setSearched(true)
     } catch (err) {
-      setError(err.response?.data?.message || 'Search failed. Please try again.')
+      setError(getErrorMessage(err, 'Search failed. Please try again.'))
     } finally {
       setLoading(false)
     }

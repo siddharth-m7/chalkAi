@@ -1,13 +1,23 @@
 import { useState } from 'react'
 import api from '../api/axios'
+import type { ExportFormat } from '../types'
 
-export const useExport = (contentId, title) => {
-  const [exporting, setExporting] = useState(null) // 'pdf' | 'docx' | null
-  const [preview, setPreview] = useState(null) // { url, filename } | null
+interface ExportPreview {
+  url: string
+  filename: string
+}
+
+interface ExportOptions {
+  direct?: boolean
+}
+
+export const useExport = (contentId: string | undefined, title?: string) => {
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
+  const [preview, setPreview] = useState<ExportPreview | null>(null)
 
   const safeName = (title || 'export').replace(/[^a-z0-9_\-\s]/gi, '').trim().replace(/\s+/g, '_')
 
-  const triggerDownload = (blob, filename) => {
+  const triggerDownload = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -18,7 +28,11 @@ export const useExport = (contentId, title) => {
     URL.revokeObjectURL(url)
   }
 
-  const exportAs = async (format, includeAnswers = false, { direct = false } = {}) => {
+  const exportAs = async (
+    format: ExportFormat,
+    includeAnswers = false,
+    { direct = false }: ExportOptions = {}
+  ) => {
     if (!contentId || exporting) return
     setExporting(format)
     try {

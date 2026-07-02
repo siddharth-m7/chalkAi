@@ -57,7 +57,7 @@ const STATEMENT = "Teachers spend hours every week writing questions, planning l
 
 const Home = () => {
   const { user, loading } = useAuth()
-  const statementRef = useRef(null)
+  const statementRef = useRef<HTMLHeadingElement | null>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const Home = () => {
           if (rect.bottom >= 0 && rect.top <= wh) {
             const center = rect.top + rect.height / 2
             const rel = (wh - center) / wh
-            let p = rel < 0.35 ? (rel - 0.1) / 0.25 : rel <= 0.65 ? 1 : 1 - (rel - 0.65) / 0.25
+            const p = rel < 0.35 ? (rel - 0.1) / 0.25 : rel <= 0.65 ? 1 : 1 - (rel - 0.65) / 0.25
             setScrollProgress(Math.min(1, Math.max(0, p)))
           }
         }

@@ -1,18 +1,31 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import api from '../api/axios'
+import { getErrorMessage } from '../api/axios'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics', 'Other']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
 
 const inputCls = 'w-full h-10 px-3 bg-white border border-sand rounded-md text-sm text-charcoal placeholder-charcoal/35 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition-colors'
 
+type MultiField = 'subjects' | 'gradeLevels'
+
+interface ProfileForm {
+  name: string
+  profile: {
+    school: string
+    subjects: string[]
+    gradeLevels: string[]
+    bio: string
+  }
+}
+
 const Profile = () => {
   const navigate = useNavigate()
   const { user, updateUser } = useAuth()
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileForm>({
     name: user?.name || '',
     profile: {
       school:      user?.profile?.school      || '',
@@ -25,7 +38,7 @@ const Profile = () => {
   const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     if (name === 'name') {
       setForm({ ...form, name: value })
@@ -34,7 +47,7 @@ const Profile = () => {
     }
   }
 
-  const toggleMulti = (field, value) => {
+  const toggleMulti = (field: MultiField, value: string) => {
     const current = form.profile[field]
     const updated = current.includes(value)
       ? current.filter((v) => v !== value)
@@ -42,7 +55,7 @@ const Profile = () => {
     setForm({ ...form, profile: { ...form.profile, [field]: updated } })
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
@@ -52,7 +65,7 @@ const Profile = () => {
       updateUser(res.data.user)
       setSuccess(true)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update profile')
+      setError(getErrorMessage(err, 'Failed to update profile'))
     } finally {
       setLoading(false)
     }

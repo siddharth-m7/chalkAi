@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import api from '../api/axios'
+import api, { getErrorMessage } from '../api/axios'
 import { useExport } from '../hooks/useExport'
 import { useLibrary } from '../hooks/useLibrary'
 import ExportPreviewModal from '../components/ExportPreviewModal'
+import type { ConceptOutput, GeneratedContent } from '../types'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
@@ -19,16 +20,19 @@ const TYPES = [
 
 const inputCls = 'w-full h-9 px-3 bg-white border border-sand rounded-md text-sm text-charcoal placeholder-charcoal/35 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition-colors'
 
+type ConceptContent = GeneratedContent<ConceptOutput>
+
 const ConceptExplainer = () => {
   const navigate = useNavigate()
   const [form, setForm] = useState({ concept: '', subject: '', gradeLevel: '', additionalContext: '' })
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState<ConceptContent | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setResult(null)
@@ -37,7 +41,7 @@ const ConceptExplainer = () => {
       const res = await api.post('/generate/concept', form)
       setResult(res.data.data)
     } catch (err) {
-      setError(err.response?.data?.message || 'Generation failed. Please try again.')
+      setError(getErrorMessage(err, 'Generation failed. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -161,7 +165,7 @@ const ConceptExplainer = () => {
   )
 }
 
-const ConceptResult = ({ content, onReset }) => {
+const ConceptResult = ({ content, onReset }: { content: ConceptContent; onReset: () => void }) => {
   const { output } = content
   const [activeTab, setActiveTab] = useState(0)
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.concept)
@@ -237,12 +241,12 @@ const ConceptResult = ({ content, onReset }) => {
 
         {/* Tab content */}
         <div className="p-5 sm:p-6">
-          {active?.success ? (
+          {active && active.success ? (
             <div>
               <h3 className="text-base font-bold text-black mb-3">{active.title}</h3>
               <p className="text-sm text-stone-600 leading-relaxed mb-5">{active.content}</p>
 
-              {active.keyPoints?.length > 0 && (
+              {active.keyPoints && active.keyPoints.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-stone-600 uppercase tracking-widest mb-3">Key Points</p>
                   <ul className="space-y-2">

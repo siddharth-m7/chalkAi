@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import Layout from '../components/Layout'
-import api from '../api/axios'
+import api, { getErrorMessage } from '../api/axios'
 import { useExport } from '../hooks/useExport'
 import ExportPreviewModal from '../components/ExportPreviewModal'
+import type { GeneratedContent, LessonPlanOutput, LibraryItem } from '../types'
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Computer Science', 'Economics']
 const GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
@@ -11,7 +13,19 @@ const DURATIONS = [30, 45, 60, 90]
 const POLL_INTERVAL = 2500
 const POLL_TIMEOUT = 60000
 
-const defaultForm = {
+interface LessonPlanForm {
+  subject: string
+  gradeLevel: string
+  chapter: string
+  topic: string
+  weekStartDate: string
+  numberOfDays: number
+  classDuration: number
+  learningObjectives: string
+  additionalInfo: string
+}
+
+const defaultForm: LessonPlanForm = {
   subject: '',
   gradeLevel: '',
   chapter: '',
@@ -25,10 +39,15 @@ const defaultForm = {
 
 const inputCls = 'w-full h-9 px-3 bg-white border border-sand rounded-md text-sm text-charcoal placeholder-charcoal/35 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition-colors'
 
+type Status = 'idle' | 'queued' | 'completed' | 'failed'
+type Phase = 'landing' | 'form' | 'result'
+type LessonPlanContent = GeneratedContent<LessonPlanOutput>
+
 // ── Recent lesson plan card (landing page) ──────────────────────────────────
-const RecentLessonPlanCard = ({ item }) => {
-  const contentId = item.contentId?._id || item.contentId
-  const output = item.contentId?.output || {}
+const RecentLessonPlanCard = ({ item }: { item: LibraryItem }) => {
+  const populated = typeof item.contentId === 'object' ? item.contentId : null
+  const contentId = populated?._id ?? (typeof item.contentId === 'string' ? item.contentId : undefined)
+  const output = (populated?.output ?? {}) as LessonPlanOutput
   const title = output.title || 'Untitled'
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(contentId, title)
 
@@ -68,22 +87,21 @@ const RecentLessonPlanCard = ({ item }) => {
 // ── Main page ────────────────────────────────────────────────────────────────
 const LessonPlanGenerator = () => {
   const navigate = useNavigate()
-  // 'landing' | 'form' | 'result'
-  const [phase, setPhase] = useState('landing')
-  const [form, setForm] = useState(defaultForm)
-  const [status, setStatus] = useState('idle')
-  const [jobId, setJobId] = useState(null)
-  const [result, setResult] = useState(null)
+  const [phase, setPhase] = useState<Phase>('landing')
+  const [form, setForm] = useState<LessonPlanForm>(defaultForm)
+  const [status, setStatus] = useState<Status>('idle')
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [result, setResult] = useState<LessonPlanContent | null>(null)
   const [error, setError] = useState('')
-  const [recent, setRecent] = useState([])
+  const [recent, setRecent] = useState<LibraryItem[]>([])
   const [loadingRecent, setLoadingRecent] = useState(true)
-  const intervalRef = useRef(null)
-  const timeoutRef = useRef(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     api.get('/library')
       .then(res => {
-        const items = (res.data.data || [])
+        const items = ((res.data.data || []) as LibraryItem[])
           .filter(i => i.itemType === 'lessonPlan')
           .slice(0, 4)
         setRecent(items)
@@ -96,7 +114,7 @@ const LessonPlanGenerator = () => {
     if (status !== 'queued' || !jobId) return
 
     timeoutRef.current = setTimeout(() => {
-      clearInterval(intervalRef.current)
+      if (intervalRef.current) clearInterval(intervalRef.current)
       setError('Generation timed out. The AI took too long to respond. Please try again.')
       setStatus('failed')
     }, POLL_TIMEOUT)
@@ -106,34 +124,34 @@ const LessonPlanGenerator = () => {
         const res = await api.get(`/generate/lesson-plan/status/${jobId}`)
         const { status: jobStatus, data, message } = res.data
         if (jobStatus === 'completed') {
-          clearTimeout(timeoutRef.current)
+          if (timeoutRef.current) clearTimeout(timeoutRef.current)
           setResult(data)
           setStatus('completed')
           setPhase('result')
         } else if (jobStatus === 'failed') {
-          clearTimeout(timeoutRef.current)
+          if (timeoutRef.current) clearTimeout(timeoutRef.current)
           setError(message || 'Generation failed. Please try again.')
           setStatus('failed')
         }
       } catch {
-        clearTimeout(timeoutRef.current)
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
         setError('Failed to check generation status.')
         setStatus('failed')
       }
     }, POLL_INTERVAL)
 
     return () => {
-      clearInterval(intervalRef.current)
-      clearTimeout(timeoutRef.current)
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [status, jobId])
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setStatus('queued')
@@ -145,14 +163,14 @@ const LessonPlanGenerator = () => {
       })
       setJobId(res.data.jobId)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to start generation.')
+      setError(getErrorMessage(err, 'Failed to start generation.'))
       setStatus('failed')
     }
   }
 
   const handleReset = () => {
-    clearInterval(intervalRef.current)
-    clearTimeout(timeoutRef.current)
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setStatus('idle')
     setJobId(null)
     setResult(null)
@@ -161,8 +179,8 @@ const LessonPlanGenerator = () => {
   }
 
   const handleBack = () => {
-    clearInterval(intervalRef.current)
-    clearTimeout(timeoutRef.current)
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setStatus('idle')
     setJobId(null)
     setResult(null)
@@ -366,7 +384,7 @@ const LessonPlanGenerator = () => {
               </button>
               <span className="text-sm text-charcoal/75">Back to lesson plans</span>
             </div>
-            <LessonPlanPreview content={result} onRegenerate={handleReset} />
+            {result && <LessonPlanPreview content={result} onRegenerate={handleReset} />}
           </div>
         )}
       </div>
@@ -384,10 +402,10 @@ const GeneratingState = () => (
   </div>
 )
 
-const LessonPlanPreview = ({ content, onRegenerate }) => {
+const LessonPlanPreview = ({ content, onRegenerate }: { content: LessonPlanContent; onRegenerate: () => void }) => {
   const { output } = content
   const dayCount = output.days?.length || 0
-  const [openDays, setOpenDays] = useState(() => new Set(Array.from({ length: dayCount }, (_, i) => i)))
+  const [openDays, setOpenDays] = useState<Set<number>>(() => new Set(Array.from({ length: dayCount }, (_, i) => i)))
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const { exportAs, exporting, preview, closePreview, downloadFromPreview } = useExport(content._id, output.title)
@@ -399,7 +417,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
     else setOpenDays(new Set(Array.from({ length: dayCount }, (_, i) => i)))
   }
 
-  const toggleDay = (i) => {
+  const toggleDay = (i: number) => {
     const next = new Set(openDays)
     if (next.has(i)) next.delete(i)
     else next.add(i)
@@ -417,7 +435,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
       await api.post('/library', { contentId: content._id, title: output.title })
       setSaved(true)
     } catch (err) {
-      if (err.response?.status === 409) setSaved(true)
+      if (axios.isAxiosError(err) && err.response?.status === 409) setSaved(true)
     } finally {
       setSaving(false)
     }
@@ -504,7 +522,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
 
             {openDays.has(i) && (
               <div className="px-5 sm:px-6 pb-6 space-y-5 border-t border-stone-100">
-                {day.objectives?.length > 0 && (
+                {day.objectives && day.objectives.length > 0 && (
                   <div className="pt-4">
                     <p className="text-xs font-semibold text-stone-600 uppercase tracking-widest mb-2">Objectives</p>
                     <ul className="space-y-1">
@@ -531,7 +549,7 @@ const LessonPlanPreview = ({ content, onRegenerate }) => {
                   ))}
                 </div>
 
-                {day.materials?.length > 0 && (
+                {day.materials && day.materials.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-stone-600 uppercase tracking-widest mb-2">Materials</p>
                     <div className="flex flex-wrap gap-2">

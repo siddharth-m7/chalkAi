@@ -1,17 +1,26 @@
+import { type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 
 // ── Icons ──────────────────────────────────────────────────────────────────
-const Icon = ({ children, size = 20 }) => (
+const Icon = ({ children, size = 20 }: { children: ReactNode; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
     {children}
   </svg>
 )
 
+interface Tool {
+  mono: string
+  title: string
+  description: string
+  to: string
+  icon: ReactNode
+}
+
 // ── AI Generator cards (primary 3) ─────────────────────────────────────────
-const primaryTools = [
+const primaryTools: Tool[] = [
   {
     mono: 'Assignment Generator',
     title: 'Create Assignments',
@@ -50,7 +59,7 @@ const primaryTools = [
 ]
 
 // ── Utility cards (secondary 2) ────────────────────────────────────────────
-const utilityTools = [
+const utilityTools: Tool[] = [
   {
     mono: 'Resource Discovery',
     title: 'Find Videos',
@@ -78,7 +87,7 @@ const utilityTools = [
 ]
 
 // ── Primary tool card ───────────────────────────────────────────────────────
-const PrimaryCard = ({ mono, title, description, to, icon }) => (
+const PrimaryCard = ({ mono, title, description, to, icon }: Tool) => (
   <Link
     to={to}
     className="group flex flex-col p-5 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
@@ -115,7 +124,7 @@ const PrimaryCard = ({ mono, title, description, to, icon }) => (
 )
 
 // ── Utility card ────────────────────────────────────────────────────────────
-const UtilityCard = ({ mono, title, description, to, icon }) => (
+const UtilityCard = ({ mono, title, description, to, icon }: Tool) => (
   <Link
     to={to}
     className="group flex items-center gap-4 px-5 py-4 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
@@ -163,7 +172,7 @@ const Dashboard = () => {
 
         {/* AI generators */}
         <div className="mb-6">
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {primaryTools.map((t) => <PrimaryCard key={t.to} {...t} />)}
           </div>
